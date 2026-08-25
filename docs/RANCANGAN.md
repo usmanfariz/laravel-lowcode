@@ -340,6 +340,12 @@ atau tabel join — itu mencegah metadata menunjuk tabel yang tidak ikut di-join
 kolom ber-`is_group_column` masuk `GROUP BY`. Jumlah baris report beragregat dihitung
 lewat subquery — `COUNT` langsung akan mengembalikan jumlah baris sebelum pengelompokan.
 
+> Subquery penghitung itu memilih konstanta (`SELECT 1`), bukan kolom aslinya. Query
+> tanpa `select` eksplisit jatuh ke `SELECT *`, dan pada report ber-join itu
+> menghasilkan nama kolom ganda (mis. dua kolom `id`) yang **ditolak MySQL** sebagai
+> derived table. SQLite mengizinkannya, jadi bug seperti ini tidak akan terlihat di
+> suite SQLite — penjagaannya ada di `tests/Feature/ReportCountMysqlTest.php`.
+
 **Soft delete.** `reports.use_soft_delete` ditambahkan migrasi `2026_08_25_100003`,
 default **true**. Sebelumnya `forms` punya flag ini tapi `reports` tidak, sehingga report
 memuat baris yang sudah dihapus lewat form. Flag hanya berlaku bila tabelnya memang punya
@@ -605,7 +611,7 @@ pesan yang muncul memakai istilah yang dikenal pengguna:
 
 ## 11k. Test Otomatis
 
-`php artisan test` — **146 test, ~4 detik.** 131 berjalan di SQLite; 15 sisanya butuh MySQL
+`php artisan test` — **152 test, ~4 detik.** 133 berjalan di SQLite; 19 sisanya butuh MySQL
 dan **dilewati otomatis** bila database ujinya belum disiapkan.
 
 | Berkas | Cakupan |
@@ -619,6 +625,7 @@ dan **dilewati otomatis** bila database ujinya belum disiapkan.
 | `tests/Feature/QueuedExportTest.php` | ambang antrean, worker, kepemilikan berkas, prune |
 | `tests/Feature/TableInspectorTest.php` | **butuh MySQL** — `information_schema`, enum, pemetaan generator |
 | `tests/Feature/SeederIdempotencyTest.php` | seeder aman dijalankan berulang, password & setelan tidak tertimpa |
+| `tests/Feature/ReportCountMysqlTest.php` | **butuh MySQL** — penghitung baris report beragregat ber-join |
 
 **Suite berjalan di SQLite** (bawaan `phpunit.xml`), jadi tidak perlu menyiapkan
 database apa pun. `tests/MetadataTestCase.php` membuat tabel bisnis kecil sendiri —

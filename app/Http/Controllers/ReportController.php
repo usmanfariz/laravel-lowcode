@@ -215,6 +215,12 @@ class ReportController extends Controller
         ]);
     }
 
+    /**
+     * Jumlah baris hasil report.
+     *
+     * Report beragregat dihitung lewat subquery karena COUNT langsung
+     * mengembalikan jumlah baris SEBELUM pengelompokan.
+     */
     private function countRows($query, Report $report): int
     {
         $hasGrouping = $report->columns->where('is_group_column', true)->isNotEmpty();
@@ -223,7 +229,13 @@ class ReportController extends Controller
             return (clone $query)->getCountForPagination();
         }
 
-        return DB::query()->fromSub(clone $query, 'sub')->count();
+        // Kolom subquery diganti konstanta: yang dihitung jumlah grup, bukan
+        // isinya. Tanpa ini, query tanpa select eksplisit jatuh ke "select *"
+        // dan report ber-join menghasilkan nama kolom ganda (dua kolom "id"),
+        // yang ditolak MySQL sebagai derived table.
+        $sub = (clone $query)->select(DB::raw('1'));
+
+        return DB::query()->fromSub($sub, 'sub')->count();
     }
 
     /** Baris total untuk kolom yang ditandai show_total. */

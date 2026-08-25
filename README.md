@@ -101,10 +101,11 @@ Penjadwal membuang berkas ekspor yang lewat masa simpan. Tambahkan satu entri cr
 php artisan test
 ```
 
-146 test. Sebagian besar berjalan di SQLite in-memory tanpa persiapan apa pun.
+152 test. Sebagian besar berjalan di SQLite in-memory tanpa persiapan apa pun.
 
-15 test menyentuh bagian yang hanya ada di MySQL (`information_schema`, kolom `ENUM`)
-dan **dilewati otomatis** sampai database ujinya disiapkan:
+19 test menyentuh perilaku yang hanya muncul di MySQL (`information_schema`, kolom
+`ENUM`, penolakan nama kolom ganda pada derived table) dan **dilewati otomatis** sampai
+database ujinya disiapkan:
 
 ```bash
 sudo mysql -e "CREATE DATABASE laravel_lowcode_test

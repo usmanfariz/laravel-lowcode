@@ -206,6 +206,73 @@ class ReportEngineTest extends MetadataTestCase
         $this->assertSame(1, $query->count());
     }
 
+    // ---------------- jumlah baris ----------------
+
+    #[Test]
+    public function menghitung_baris_report_beragregat_pada_report_ber_join(): void
+    {
+        // Report dengan join DAN group by: subquery penghitungnya dulu memakai
+        // "select *", sehingga dua kolom "id" bertabrakan di derived table.
+        $this->seedGroupColumn();
+
+        DB::table('t_items')->insert([
+            ['code' => 'A', 'name' => 'Satu', 'category_id' => 1],
+            ['code' => 'B', 'name' => 'Dua', 'category_id' => 1],
+            ['code' => 'C', 'name' => 'Tiga', 'category_id' => 2],
+        ]);
+
+        $data = $this->actingAs($this->admin)
+            ->getJson('/reports/item_summary/data?draw=1&start=0&length=10')
+            ->assertOk()
+            ->json();
+
+        // Dua kategori berbeda -> dua baris hasil pengelompokan.
+        $this->assertSame(2, $data['recordsTotal']);
+    }
+
+    #[Test]
+    public function ekspor_report_beragregat_ber_join_tidak_gagal(): void
+    {
+        $this->seedGroupColumn();
+
+        DB::table('t_items')->insert([
+            ['code' => 'A', 'name' => 'Satu', 'category_id' => 1],
+            ['code' => 'B', 'name' => 'Dua', 'category_id' => 2],
+        ]);
+
+        // Jalur ekspor memanggil penghitung baris untuk memutuskan sinkron
+        // atau antre — di situlah regresinya dulu muncul.
+        $this->actingAs($this->admin)
+            ->get('/reports/item_summary/export/csv')
+            ->assertOk()
+            ->assertHeader('content-type', 'text/csv; charset=UTF-8');
+    }
+
+    /** Tambahkan kolom pengelompokan dan satu kolom agregat. */
+    private function seedGroupColumn(): void
+    {
+        DB::table('report_columns')->insert([
+            [
+                'report_id' => $this->report->id, 'label' => 'Kategori',
+                'source_type' => 'column', 'column_name' => 'k.name',
+                'aggregate' => 'none', 'format' => 'text', 'align' => 'left',
+                'is_visible' => true, 'is_sortable' => false, 'is_searchable' => false,
+                'is_group_column' => true, 'show_total' => false,
+                'order_no' => 1, 'is_active' => true,
+            ],
+            [
+                'report_id' => $this->report->id, 'label' => 'Jumlah',
+                'source_type' => 'column', 'column_name' => 'i.id',
+                'aggregate' => 'count', 'format' => 'number', 'align' => 'right',
+                'is_visible' => true, 'is_sortable' => false, 'is_searchable' => false,
+                'is_group_column' => false, 'show_total' => true,
+                'order_no' => 2, 'is_active' => true,
+            ],
+        ]);
+
+        $this->report = $this->report->fresh(['joins', 'columns', 'filters']);
+    }
+
     // ---------------- mode raw ----------------
 
     #[Test]

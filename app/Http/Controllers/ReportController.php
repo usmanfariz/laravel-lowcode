@@ -223,10 +223,19 @@ class ReportController extends Controller
      */
     private function countRows($query, Report $report): int
     {
-        $hasGrouping = $report->columns->where('is_group_column', true)->isNotEmpty();
+        // Penentu grup diambil dari builder agar sama persis dengan yang
+        // dipakai query-nya, termasuk pengelompokan otomatis.
+        $hasGrouping = $this->builder->groupColumns($report)->isNotEmpty();
 
         if (! $hasGrouping) {
-            return (clone $query)->getCountForPagination();
+            // Report yang seluruh kolomnya agregat tanpa GROUP BY menghasilkan
+            // tepat satu baris ringkasan. Menghitung baris sumbernya akan
+            // melaporkan angka yang jauh lebih besar daripada yang tampil.
+            $adaAgregat = $report->columns
+                ->where('is_visible', true)
+                ->contains(fn ($column) => $column->isAggregated());
+
+            return $adaAgregat ? 1 : (clone $query)->getCountForPagination();
         }
 
         // Kolom subquery diganti konstanta: yang dihitung jumlah grup, bukan

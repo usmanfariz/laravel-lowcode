@@ -206,6 +206,146 @@ class ReportEngineTest extends MetadataTestCase
         $this->assertSame(1, $query->count());
     }
 
+    // ---------------- pengelompokan ----------------
+
+    /** @param array<int, array{string,string,string,bool}> $columns label,kolom,agregat,grup */
+    private function seedColumns(array $columns): void
+    {
+        $order = 0;
+        foreach ($columns as [$label, $name, $aggregate, $isGroup]) {
+            DB::table('report_columns')->insert([
+                'report_id' => $this->report->id, 'label' => $label,
+                'source_type' => str_contains($name, '(') ? 'expression' : 'column',
+                'column_name' => str_contains($name, '(') ? null : $name,
+                'expression' => str_contains($name, '(') ? $name : null,
+                'aggregate' => $aggregate, 'format' => 'text', 'align' => 'left',
+                'is_visible' => true, 'is_sortable' => false, 'is_searchable' => false,
+                'is_group_column' => $isGroup, 'show_total' => false,
+                'order_no' => ++$order, 'is_active' => true,
+            ]);
+        }
+
+        $this->report = $this->report->fresh(['joins', 'columns', 'filters']);
+    }
+
+    private function seedTigaBarisDuaKategori(): void
+    {
+        DB::table('t_items')->insert([
+            ['code' => 'A', 'name' => 'Satu', 'category_id' => 1],
+            ['code' => 'B', 'name' => 'Dua', 'category_id' => 1],
+            ['code' => 'C', 'name' => 'Tiga', 'category_id' => 2],
+        ]);
+    }
+
+    #[Test]
+    public function campuran_agregat_dan_biasa_tanpa_penanda_dikelompokkan_sendiri(): void
+    {
+        // COUNT(id) berdampingan dengan k.name hanya punya satu tafsir yang
+        // masuk akal: hitung per nama. Tanpa GROUP BY, MySQL dengan
+        // only_full_group_by menolaknya.
+        $this->seedColumns([
+            ['Jumlah', 'i.id', 'count', false],
+            ['Kategori', 'k.name', 'none', false],
+        ]);
+        $this->seedTigaBarisDuaKategori();
+
+        $grup = $this->builder()->groupColumns($this->report);
+
+        $this->assertCount(1, $grup);
+        $this->assertSame('k.name', $grup->first()->column_name);
+
+        $data = $this->actingAs($this->admin)
+            ->getJson('/reports/item_summary/data?draw=1&start=0&length=10')->json();
+
+        $this->assertSame(2, $data['recordsTotal'], 'dua kategori seharusnya jadi dua baris');
+    }
+
+    #[Test]
+    public function seluruhnya_agregat_tetap_satu_baris_ringkasan(): void
+    {
+        // Ini sah dan memang perilaku yang diharapkan: satu baris ringkasan.
+        $this->seedColumns([
+            ['Jumlah', 'i.id', 'count', false],
+            ['Total', 'i.qty', 'sum', false],
+        ]);
+        $this->seedTigaBarisDuaKategori();
+
+        $this->assertCount(0, $this->builder()->groupColumns($this->report));
+
+        $data = $this->actingAs($this->admin)
+            ->getJson('/reports/item_summary/data?draw=1&start=0&length=10')->json();
+
+        $this->assertSame(1, $data['recordsTotal']);
+    }
+
+    #[Test]
+    public function penanda_eksplisit_mengalahkan_pengelompokan_otomatis(): void
+    {
+        $this->seedColumns([
+            ['Jumlah', 'i.id', 'count', false],
+            ['Kategori', 'k.name', 'none', true],
+            ['Kode', 'i.code', 'none', false],
+        ]);
+        $this->seedTigaBarisDuaKategori();
+
+        $grup = $this->builder()->groupColumns($this->report);
+
+        // Hanya yang ditandai, bukan seluruh kolom non-agregat.
+        $this->assertCount(1, $grup);
+        $this->assertSame('k.name', $grup->first()->column_name);
+    }
+
+    #[Test]
+    public function ekspresi_beragregat_tidak_ikut_dikelompokkan(): void
+    {
+        // SUM(i.qty * 2) punya kolom `aggregate` bernilai 'none', tapi jelas
+        // hasil agregasi. Mengelompokkan berdasarkan SUM tidak masuk akal.
+        $this->seedColumns([
+            ['Nilai', 'SUM(i.qty * 2)', 'none', false],
+            ['Kategori', 'k.name', 'none', false],
+        ]);
+        $this->seedTigaBarisDuaKategori();
+
+        $grup = $this->builder()->groupColumns($this->report);
+
+        $this->assertCount(1, $grup);
+        $this->assertSame('k.name', $grup->first()->column_name,
+            'ekspresi agregat ikut masuk GROUP BY');
+    }
+
+    #[Test]
+    public function report_tanpa_agregat_sama_sekali_tidak_dikelompokkan(): void
+    {
+        $this->seedColumns([
+            ['Kode', 'i.code', 'none', false],
+            ['Kategori', 'k.name', 'none', false],
+        ]);
+        $this->seedTigaBarisDuaKategori();
+
+        $this->assertCount(0, $this->builder()->groupColumns($this->report));
+
+        $data = $this->actingAs($this->admin)
+            ->getJson('/reports/item_summary/data?draw=1&start=0&length=10')->json();
+
+        $this->assertSame(3, $data['recordsTotal'], 'baris ikut terkelompok padahal tak ada agregat');
+    }
+
+    #[Test]
+    public function kolom_tersembunyi_tidak_ikut_menentukan_pengelompokan(): void
+    {
+        $this->seedColumns([
+            ['Jumlah', 'i.id', 'count', false],
+            ['Kategori', 'k.name', 'none', false],
+        ]);
+        DB::table('report_columns')->where('report_id', $this->report->id)
+            ->where('label', 'Kategori')->update(['is_visible' => false]);
+        $this->report = $this->report->fresh(['joins', 'columns', 'filters']);
+
+        // Hanya kolom tampil yang jadi bagian SELECT, jadi hanya itu pula yang
+        // relevan bagi GROUP BY.
+        $this->assertCount(0, $this->builder()->groupColumns($this->report));
+    }
+
     // ---------------- jumlah baris ----------------
 
     #[Test]

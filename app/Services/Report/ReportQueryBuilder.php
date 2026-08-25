@@ -10,6 +10,7 @@ use App\Services\DataSourceResolver;
 use App\Services\SqlExpressionGuard;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Database\Query\Expression;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -280,17 +281,41 @@ class ReportQueryBuilder
 
     public function applyGrouping(Builder $query, Report $report): void
     {
-        $groupColumns = $report->columns->where('is_group_column', true);
-
-        // Agregat tanpa group by menghasilkan satu baris ringkasan — itu sah
-        // dan memang perilaku yang diharapkan report bertipe summary.
-        if ($groupColumns->isEmpty()) {
-            return;
-        }
-
-        foreach ($groupColumns as $column) {
+        foreach ($this->groupColumns($report) as $column) {
             $query->groupBy(DB::raw($this->rawFor($report, $column)));
         }
+    }
+
+    /**
+     * Kolom yang masuk GROUP BY.
+     *
+     * Bila tidak ada yang ditandai eksplisit tapi report mencampur kolom
+     * agregat dan non-agregat, kolom non-agregatnya dikelompokkan sendiri.
+     * Campuran seperti `COUNT(id)` dengan `nama` hanya punya satu tafsir yang
+     * masuk akal — "hitung per nama" — dan tanpa GROUP BY, MySQL dengan
+     * only_full_group_by menolaknya dengan pesan yang membingungkan pengguna.
+     *
+     * Agregat tanpa kolom non-agregat sama sekali tetap tanpa GROUP BY: itu
+     * memang satu baris ringkasan, dan sah.
+     *
+     * @return \Illuminate\Support\Collection<int, ReportColumn>
+     */
+    public function groupColumns(Report $report): Collection
+    {
+        $visible = $report->columns->where('is_visible', true);
+
+        $explicit = $visible->where('is_group_column', true)->values();
+
+        if ($explicit->isNotEmpty()) {
+            return $explicit;
+        }
+
+        // Ekspresi yang mengandung fungsi agregat ikut dihitung agregat,
+        // sehingga tidak keliru masuk GROUP BY.
+        $aggregated = $visible->filter(fn (ReportColumn $c) => $c->isAggregated());
+        $plain = $visible->reject(fn (ReportColumn $c) => $c->isAggregated())->values();
+
+        return $aggregated->isNotEmpty() && $plain->isNotEmpty() ? $plain : collect();
     }
 
     public function applyOrder(Builder $query, Report $report, ?int $columnIndex, string $direction): void

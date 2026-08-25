@@ -358,6 +358,19 @@ atau tabel join — itu mencegah metadata menunjuk tabel yang tidak ikut di-join
 kolom ber-`is_group_column` masuk `GROUP BY`. Jumlah baris report beragregat dihitung
 lewat subquery — `COUNT` langsung akan mengembalikan jumlah baris sebelum pengelompokan.
 
+**Pengelompokan otomatis.** Bila tidak ada kolom bertanda `is_group_column` tapi report
+mencampur kolom agregat dan non-agregat, kolom non-agregatnya dikelompokkan sendiri.
+Campuran seperti `COUNT(id)` dengan `nama` hanya punya satu tafsir yang masuk akal —
+"hitung per nama" — dan tanpa `GROUP BY`, MySQL dengan `only_full_group_by` menolaknya
+dengan pesan yang tidak berarti apa-apa bagi pengguna.
+
+Report yang **seluruh** kolomnya agregat tetap tanpa `GROUP BY`: itu memang satu baris
+ringkasan, dan jumlah barisnya dilaporkan 1 — bukan jumlah baris sumbernya.
+
+Ekspresi yang memuat fungsi agregat (`SUM(p.price * p.stock)`) dihitung sebagai agregat
+walau kolom `aggregate`-nya `none`, sehingga tidak keliru ikut masuk `GROUP BY`. Lihat
+`ReportColumn::isAggregated()`.
+
 > Subquery penghitung itu memilih konstanta (`SELECT 1`), bukan kolom aslinya. Query
 > tanpa `select` eksplisit jatuh ke `SELECT *`, dan pada report ber-join itu
 > menghasilkan nama kolom ganda (mis. dua kolom `id`) yang **ditolak MySQL** sebagai
@@ -629,7 +642,7 @@ pesan yang muncul memakai istilah yang dikenal pengguna:
 
 ## 11k. Test Otomatis
 
-`php artisan test` — **174 test, ~4 detik.** 155 berjalan di SQLite; 19 sisanya butuh MySQL
+`php artisan test` — **182 test, ~5 detik.** 161 berjalan di SQLite; 21 sisanya butuh MySQL
 dan **dilewati otomatis** bila database ujinya belum disiapkan.
 
 | Berkas | Cakupan |

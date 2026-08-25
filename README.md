@@ -101,9 +101,9 @@ Penjadwal membuang berkas ekspor yang lewat masa simpan. Tambahkan satu entri cr
 php artisan test
 ```
 
-174 test. Sebagian besar berjalan di SQLite in-memory tanpa persiapan apa pun.
+182 test. Sebagian besar berjalan di SQLite in-memory tanpa persiapan apa pun.
 
-19 test menyentuh perilaku yang hanya muncul di MySQL (`information_schema`, kolom
+21 test menyentuh perilaku yang hanya muncul di MySQL (`information_schema`, kolom
 `ENUM`, penolakan nama kolom ganda pada derived table) dan **dilewati otomatis** sampai
 database ujinya disiapkan:
 

@@ -144,4 +144,32 @@ class ReportCountMysqlTest extends MysqlTestCase
             ->get('/reports/ringkasan/export/xlsx')
             ->assertOk();
     }
+
+    #[Test]
+    public function campuran_agregat_tanpa_penanda_tidak_melanggar_only_full_group_by(): void
+    {
+        // Report tanpa kolom bertanda grup: COUNT berdampingan dengan kolom
+        // biasa. MySQL dengan only_full_group_by menolaknya bila GROUP BY
+        // tidak dikeluarkan; SQLite membiarkannya lewat, jadi penjagaannya
+        // harus di sini.
+        DB::table('report_columns')->where('report_id', $this->report->id)
+            ->update(['is_group_column' => false]);
+
+        $data = $this->actingAs($this->admin)
+            ->getJson('/reports/ringkasan/data?draw=1&start=0&length=10')
+            ->assertOk()
+            ->json();
+
+        $this->assertSame(2, $data['recordsTotal']);
+    }
+
+    #[Test]
+    public function sql_mode_only_full_group_by_memang_aktif(): void
+    {
+        // Bila mode ini mati, ketiga test di atas kehilangan artinya.
+        $mode = DB::selectOne('SELECT @@sql_mode AS mode')->mode;
+
+        $this->assertStringContainsString('ONLY_FULL_GROUP_BY', strtoupper($mode),
+            'sql_mode server uji tidak menegakkan ONLY_FULL_GROUP_BY');
+    }
 }

@@ -31,4 +31,23 @@ class ReportColumn extends Model
     {
         return $this->aggregate && $this->aggregate !== 'none';
     }
+
+    /**
+     * Apakah nilai kolom ini hasil agregasi.
+     *
+     * Berbeda dari hasAggregate(): kolom ekspresi bisa mengandung fungsi
+     * agregat sendiri (mis. `SUM(p.price * p.stock)`) walau kolom
+     * `aggregate`-nya 'none'. Membedakan keduanya penting saat menentukan
+     * kolom mana yang boleh masuk GROUP BY — mengelompokkan berdasarkan SUM
+     * tidak masuk akal dan ditolak MySQL.
+     */
+    public function isAggregated(): bool
+    {
+        if ($this->hasAggregate()) {
+            return true;
+        }
+
+        return $this->source_type === 'expression'
+            && preg_match('/\b(sum|avg|count|min|max|group_concat)\s*\(/i', (string) $this->expression) === 1;
+    }
 }

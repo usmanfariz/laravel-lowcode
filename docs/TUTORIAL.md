@@ -255,6 +255,11 @@ terdaftar yang ditawarkan.
 Kolom beragregat tidak bisa sekaligus jadi kolom pengelompokan, dan tidak bisa ikut
 pencarian — keduanya ditolak dengan penjelasan.
 
+**Lupa menandai kolom pengelompokan?** Bila report mencampur kolom agregat dan kolom
+biasa tanpa satu pun yang ditandai, kolom biasanya dikelompokkan otomatis — `COUNT(id)`
+berdampingan dengan `nama` memang hanya berarti "hitung per nama". Menandainya sendiri
+tetap lebih baik: Anda yang menentukan, bukan sistem yang menebak.
+
 ### Tab Filter
 
 Setiap filter punya kolom, operator, dan jenis masukan.

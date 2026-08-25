@@ -33,6 +33,7 @@ punya — hak DDL.
 | **Form Builder** | Sunting field, kolom daftar, baris detail, tombol aksi, dan tata letak visual; setiap perubahan terekam dan bisa dikembalikan |
 | **Report Builder** | Join, agregat, `GROUP BY`, filter dengan 13 operator, semuanya lewat UI |
 | **Grafik** | Report bertipe grafik: batang, garis, area, lingkaran, donat — di atas tabelnya |
+| **Dashboard Builder** | Susun widget angka, grafik, tabel, dan catatan lewat UI — tanpa menyentuh Blade |
 | **Master-detail** | Satu induk dengan banyak baris anak dalam satu form |
 | **Hak akses** | Role, permission per aksi, dan pembatasan data per baris (row-level scope) |
 | **Ekspor** | Excel, CSV, PDF, dan Cetak; data besar otomatis dikerjakan di latar belakang |
@@ -102,7 +103,7 @@ Penjadwal membuang berkas ekspor yang lewat masa simpan. Tambahkan satu entri cr
 php artisan test
 ```
 
-196 test. Sebagian besar berjalan di SQLite in-memory tanpa persiapan apa pun.
+213 test. Sebagian besar berjalan di SQLite in-memory tanpa persiapan apa pun.
 
 21 test menyentuh perilaku yang hanya muncul di MySQL (`information_schema`, kolom
 `ENUM`, penolakan nama kolom ganda pada derived table) dan **dilewati otomatis** sampai

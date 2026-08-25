@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\DataSourceController;
 use App\Http\Controllers\Admin\GeneratorController;
+use App\Http\Controllers\Builder\DashboardBuilderController;
 use App\Http\Controllers\Builder\FormBuilderController;
 use App\Http\Controllers\Builder\FormFieldController;
 use App\Http\Controllers\Builder\FormListColumnController;
@@ -172,6 +173,15 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::post('builder/forms/{form}/actions', [FormPartController::class, 'storeAction'])->name('builder.actions.store');
         Route::put('builder/forms/{form}/actions/{action}', [FormPartController::class, 'updateAction'])->name('builder.actions.update');
         Route::delete('builder/forms/{form}/actions/{action}', [FormPartController::class, 'destroyAction'])->name('builder.actions.destroy');
+    });
+
+    // Dashboard builder
+    Route::middleware('permission:system.dashboard')->group(function () {
+        Route::get('builder/dashboard', [DashboardBuilderController::class, 'index'])->name('builder.dashboard.index');
+        Route::post('builder/dashboard', [DashboardBuilderController::class, 'store'])->name('builder.dashboard.store');
+        Route::post('builder/dashboard/reorder', [DashboardBuilderController::class, 'reorder'])->name('builder.dashboard.reorder');
+        Route::put('builder/dashboard/{widget}', [DashboardBuilderController::class, 'update'])->name('builder.dashboard.update');
+        Route::delete('builder/dashboard/{widget}', [DashboardBuilderController::class, 'destroy'])->name('builder.dashboard.destroy');
     });
 
     // Report builder

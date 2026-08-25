@@ -642,7 +642,7 @@ pesan yang muncul memakai istilah yang dikenal pengguna:
 
 ## 11k. Test Otomatis
 
-`php artisan test` — **196 test, ~5 detik.** 175 berjalan di SQLite; 21 sisanya butuh MySQL
+`php artisan test` — **213 test, ~5 detik.** 192 berjalan di SQLite; 21 sisanya butuh MySQL
 dan **dilewati otomatis** bila database ujinya belum disiapkan.
 
 | Berkas | Cakupan |
@@ -660,6 +660,7 @@ dan **dilewati otomatis** bila database ujinya belum disiapkan.
 | `tests/Feature/FormActionRendererTest.php` | URL aksi, penyaringan izin, kondisi tampil |
 | `tests/Unit/CodeImageGeneratorTest.php` | barcode & QR: SVG sah, deterministik, URL kanonik |
 | `tests/Feature/ReportChartTest.php` | label & deret grafik, nilai mentah, alasan bila tak bisa digambar |
+| `tests/Feature/DashboardTest.php` | agregat widget, penyaringan izin, widget tak bisa melewati izin report |
 
 **Suite berjalan di SQLite** (bawaan `phpunit.xml`), jadi tidak perlu menyiapkan
 database apa pun. `tests/MetadataTestCase.php` membuat tabel bisnis kecil sendiri —
@@ -720,6 +721,37 @@ Chart.js hanya dimuat pada report bertipe grafik.
 
 > **`crosstab` belum diimplementasikan.** Nilainya ada di enum `reports.type` sejak awal
 > tapi tetap digambar sebagai tabel biasa.
+
+## 11n. Dashboard Builder
+
+Route `builder/dashboard`, dijaga permission `system.dashboard`. Dashboard sebelumnya
+Blade statis dengan angka yang di-hardcode; kini metadata-driven seperti form dan report,
+lewat tabel `dashboard_widgets` (migrasi `2026_08_25_100009`).
+
+| Jenis widget | Sumber data |
+|---|---|
+| `stat` | agregat satu tabel: `COUNT`, `SUM`, `AVG`, `MIN`, `MAX`, dengan penyaring opsional |
+| `chart` | menumpang report yang sudah ada |
+| `table` | N baris teratas dari report yang sudah ada |
+| `text` | catatan statis |
+
+**Widget `chart` dan `table` sengaja menumpang report, bukan punya mesin query sendiri.**
+Seluruh whitelist, scope per baris, dan permission report otomatis ikut berlaku — dan
+yang terpenting, **widget tidak bisa jadi jalan pintas melewati izin report**: siapa pun
+yang tidak berhak membuka report-nya juga tidak melihat angkanya di dashboard.
+
+Hanya `stat` yang punya query sendiri, dan itu pun tetap lewat `DataSourceResolver`:
+nama tabel dan kolomnya diperiksa, dan baris terhapus tidak ikut dihitung bila tabelnya
+memang punya `deleted_at`.
+
+**Satu widget bermasalah tidak mengosongkan dashboard.** Kegagalan dikembalikan sebagai
+pesan dan digambar sebagai kartu peringatan pada posisinya sendiri.
+
+Lebar memakai grid 12 kolom yang sama dengan tata letak form, dan urutannya diatur
+drag & drop. Chart.js hanya dimuat bila ada widget grafik.
+
+`MetadataSeeder` mengisi dua widget bawaan (jumlah pengguna dan role) — angka yang dulu
+di-hardcode, kini bisa disunting atau dibuang.
 
 ## 12. Hal yang belum ditangani
 

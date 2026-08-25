@@ -51,6 +51,7 @@ class MetadataSeeder extends Seeder
             ['system.raw_query',      'Gunakan Raw Query',     'Sistem'],
             ['system.data_source',    'Kelola Sumber Data',    'Sistem'],
             ['system.menu',           'Kelola Menu',           'Sistem'],
+            ['system.dashboard',      'Atur Dashboard',        'Sistem'],
             ['system.setting',        'Kelola Pengaturan',     'Sistem'],
             ['system.activity_log',   'Lihat Log Aktivitas',   'Sistem'],
             ['user.view',             'Lihat User',            'Pengguna'],
@@ -154,10 +155,11 @@ class MetadataSeeder extends Seeder
             ['system.users', 'Pengguna', 'fas fa-users', 'users.index', 'user.view', 1],
             ['system.roles', 'Role & Izin', 'fas fa-user-shield', 'roles.index', 'role.view', 2],
             ['system.menus', 'Menu', 'fas fa-bars', 'menus.index', 'system.menu', 3],
-            ['system.form_builder', 'Form Builder', 'fas fa-wpforms', 'builder.forms.index', 'system.builder.form', 4],
-            ['system.report_builder', 'Report Builder', 'fas fa-chart-bar', 'builder.reports.index', 'system.builder.report', 5],
-            ['system.data_sources', 'Sumber Data', 'fas fa-database', 'data-sources.index', 'system.data_source', 6],
-            ['system.activity_logs', 'Log Aktivitas', 'fas fa-history', 'activity-logs.index', 'system.activity_log', 7],
+            ['system.dashboard', 'Atur Dashboard', 'fas fa-th-large', 'builder.dashboard.index', 'system.dashboard', 4],
+            ['system.form_builder', 'Form Builder', 'fas fa-wpforms', 'builder.forms.index', 'system.builder.form', 5],
+            ['system.report_builder', 'Report Builder', 'fas fa-chart-bar', 'builder.reports.index', 'system.builder.report', 6],
+            ['system.data_sources', 'Sumber Data', 'fas fa-database', 'data-sources.index', 'system.data_source', 7],
+            ['system.activity_logs', 'Log Aktivitas', 'fas fa-history', 'activity-logs.index', 'system.activity_log', 8],
         ];
 
         foreach ($systemMenus as [$code, $name, $icon, $target, $permission, $order]) {
@@ -195,6 +197,30 @@ class MetadataSeeder extends Seeder
                     'label' => $label, 'is_public' => $public,
                     'created_at' => $now, 'updated_at' => $now,
                 ], $exists ? [] : ['value' => $value])
+            );
+        }
+
+        // -----------------------------------------------------------
+        // Widget dashboard bawaan
+        // Angka yang dulu di-hardcode di Blade, kini jadi metadata yang
+        // bisa disunting atau dibuang lewat Atur Dashboard.
+        // -----------------------------------------------------------
+        $widgets = [
+            ['total_pengguna', 'Pengguna', 'users', 'fas fa-users', 'info', 'user.view', 1],
+            ['total_role', 'Role', 'roles', 'fas fa-user-shield', 'success', 'role.view', 2],
+        ];
+
+        foreach ($widgets as [$code, $title, $table, $icon, $color, $permission, $order]) {
+            DB::table('dashboard_widgets')->updateOrInsert(
+                ['code' => $code],
+                [
+                    'title' => $title, 'type' => 'stat',
+                    'icon' => $icon, 'color' => $color, 'width' => 3,
+                    'source_table' => $table, 'source_column' => null,
+                    'aggregate' => 'count', 'format' => 'number',
+                    'permission_code' => $permission, 'order_no' => $order,
+                    'is_active' => true, 'created_at' => $now, 'updated_at' => $now,
+                ]
             );
         }
 

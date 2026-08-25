@@ -326,7 +326,55 @@ Berkas dibuang otomatis setelah 7 hari. Ingin merapikan lebih cepat? Pakai kotak
 
 ---
 
-## 7. Menu sidebar
+## 7. Atur dashboard
+
+**Sistem → Atur Dashboard**
+
+Dashboard disusun dari widget, sama seperti form dan report disusun dari metadata.
+Empat jenis:
+
+| Jenis | Isi | Contoh |
+|---|---|---|
+| **Angka ringkas** | agregat satu tabel | jumlah produk, total nilai persediaan |
+| **Grafik** | menumpang report yang sudah ada | produk per kategori |
+| **Tabel ringkas** | N baris teratas dari report | 5 kategori teratas |
+| **Catatan teks** | teks statis | pengumuman, pengingat |
+
+### Widget angka
+
+Pilih tabel sumber, agregat (`COUNT`, `SUM`, `AVG`, `MIN`, `MAX`), dan kolomnya.
+`COUNT` tidak butuh kolom; agregat lain wajib.
+
+**Penyaring** diketik satu kondisi per baris, format `kolom=nilai`:
+
+```
+status=published
+```
+
+Baris yang sudah dihapus (soft delete) tidak ikut dihitung.
+
+### Widget grafik dan tabel
+
+Cukup pilih report yang sudah ada — tidak perlu mendefinisikan ulang apa pun.
+
+> **Izin report tetap berlaku.** Siapa pun yang tidak berhak membuka report-nya juga
+> tidak melihat angkanya di dashboard. Widget bukan jalan pintas.
+
+Report bertipe apa pun bisa dijadikan grafik selama punya kolom label dan kolom angka —
+tidak harus bertipe *Grafik*.
+
+### Tata letak
+
+Lebar memakai grid 12 kolom, sama seperti tata letak form. Seret baris untuk mengubah
+urutan.
+
+Isi **Izin** bila widget hanya untuk sebagian orang. Widget tanpa izin terlihat semua
+yang login.
+
+> Satu widget yang bermasalah tidak mengosongkan dashboard — ia menampilkan alasannya
+> di tempatnya sendiri, sisanya tetap tergambar.
+
+## 8. Menu sidebar
 
 **Sistem → Menu**
 
@@ -345,7 +393,7 @@ tersaring akan ikut hilang, jadi tidak ada judul menggantung.
 
 ---
 
-## 8. Melacak perubahan
+## 9. Melacak perubahan
 
 **Sistem → Log Aktivitas**
 

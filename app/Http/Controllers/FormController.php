@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\StaleRecordException;
 use App\Models\Form;
 use App\Models\FormField;
 use App\Services\DataSourceResolver;
@@ -12,6 +13,7 @@ use App\Services\Form\FormRenderer;
 use App\Services\Form\FormRepository;
 use App\Services\Form\FormService;
 use App\Services\Form\FormValidator;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -162,7 +164,7 @@ class FormController extends Controller
                 $form, $id, $data, $request->user(),
                 $request->input('__version')
             );
-        } catch (\App\Exceptions\StaleRecordException $e) {
+        } catch (StaleRecordException $e) {
             return back()->withInput()->with('error', $e->getMessage());
         }
 
@@ -225,8 +227,8 @@ class FormController extends Controller
             'decimal' => number_format((float) $value, 2, ',', '.'),
             'currency' => 'Rp '.number_format((float) $value, 2, ',', '.'),
             'percentage' => number_format((float) $value, 2, ',', '.').'%',
-            'date' => optional(\Carbon\Carbon::parse($value))->format('d/m/Y'),
-            'datetime' => optional(\Carbon\Carbon::parse($value))->format('d/m/Y H:i'),
+            'date' => optional(Carbon::parse($value))->format(setting('date_format', 'd/m/Y')),
+            'datetime' => optional(Carbon::parse($value))->format(setting('date_format', 'd/m/Y').' H:i'),
             'boolean' => (bool) $value,
             default => e((string) $value),
         };

@@ -9,8 +9,8 @@ use App\Services\DataSourceResolver;
 use App\Services\SqlExpressionGuard;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Database\Query\Expression;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Menyusun query halaman list dari form_list_columns.
@@ -122,7 +122,7 @@ class FormQueryBuilder
 
         $rows = $query->select($selects)
             ->skip(max(0, (int) ($params['start'] ?? 0)))
-            ->take(min(max(1, (int) ($params['length'] ?? $form->per_page ?: 25)), 200))
+            ->take(min(max(1, (int) ($params['length'] ?? $form->per_page ?: setting('per_page', 25))), 200))
             ->get();
 
         return ['total' => $total, 'filtered' => $filtered, 'rows' => $rows, 'columns' => $columns];

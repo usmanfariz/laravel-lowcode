@@ -2,8 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Models\User;
+use App\Services\MenuService;
 use Database\Seeders\MetadataSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use PHPUnit\Framework\Attributes\Test;
@@ -96,6 +99,24 @@ class SeederIdempotencyTest extends TestCase
         $this->assertDatabaseHas('role_permissions', [
             'role_id' => $superadmin, 'permission_id' => $permission,
         ]);
+    }
+
+    #[Test]
+    public function menu_baru_dari_seeder_langsung_terlihat_di_sidebar(): void
+    {
+        // Pohon menu di-cache `rememberForever`. Menjalankan seeder pada
+        // aplikasi yang sudah berjalan harus membuang cache itu — kalau tidak,
+        // menu barunya tidak muncul dan tidak ada petunjuk kenapa.
+        Cache::forever('menu.tree', []);
+
+        $this->seed(MetadataSeeder::class);
+
+        $admin = User::where('email', 'admin@example.com')->first();
+        $menus = app(MenuService::class)->treeFor($admin)
+            ->flatMap(fn ($menu) => $menu->children->pluck('name'))
+            ->all();
+
+        $this->assertContains('Pengaturan', $menus, 'cache menu tidak dibuang oleh seeder');
     }
 
     #[Test]

@@ -3,6 +3,11 @@
 use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\DataSourceController;
 use App\Http\Controllers\Admin\GeneratorController;
+use App\Http\Controllers\Admin\MenuController;
+use App\Http\Controllers\Admin\RoleController;
+use App\Http\Controllers\Admin\SettingController;
+use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Builder\DashboardBuilderController;
 use App\Http\Controllers\Builder\FormBuilderController;
 use App\Http\Controllers\Builder\FormFieldController;
@@ -10,14 +15,11 @@ use App\Http\Controllers\Builder\FormListColumnController;
 use App\Http\Controllers\Builder\FormPartController;
 use App\Http\Controllers\Builder\ReportBuilderController;
 use App\Http\Controllers\Builder\ReportPartController;
-use App\Http\Controllers\Admin\MenuController;
-use App\Http\Controllers\Admin\RoleController;
-use App\Http\Controllers\Admin\UserController;
-use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Demo\ProductActionController;
 use App\Http\Controllers\ExportJobController;
 use App\Http\Controllers\FormController;
 use App\Http\Controllers\ReportController;
-use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/dashboard');
@@ -101,11 +103,11 @@ Route::middleware(['auth', 'active'])->group(function () {
     // Engine sengaja tidak mengurus arti "setujui" atau "arsipkan"; itu urusan
     // aplikasi. Blok ini aman dihapus bersama migrasi dan seeder demo.
     Route::prefix('demo/products')->name('demo.products.')->group(function () {
-        Route::post('approve', [\App\Http\Controllers\Demo\ProductActionController::class, 'approve'])
+        Route::post('approve', [ProductActionController::class, 'approve'])
             ->middleware('permission:product.approve')->name('approve');
-        Route::post('archive', [\App\Http\Controllers\Demo\ProductActionController::class, 'archive'])
+        Route::post('archive', [ProductActionController::class, 'archive'])
             ->middleware('permission:product.edit')->name('archive');
-        Route::get('labels', [\App\Http\Controllers\Demo\ProductActionController::class, 'printLabel'])
+        Route::get('labels', [ProductActionController::class, 'printLabel'])
             ->middleware('permission:product.print')->name('labels');
     });
 
@@ -213,6 +215,12 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::post('builder/reports/{report}/filters', [ReportPartController::class, 'storeFilter'])->name('builder.reports.filters.store');
         Route::put('builder/reports/{report}/filters/{filter}', [ReportPartController::class, 'updateFilter'])->name('builder.reports.filters.update');
         Route::delete('builder/reports/{report}/filters/{filter}', [ReportPartController::class, 'destroyFilter'])->name('builder.reports.filters.destroy');
+    });
+
+    // Pengaturan aplikasi
+    Route::middleware('permission:system.setting')->group(function () {
+        Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
+        Route::put('settings', [SettingController::class, 'update'])->name('settings.update');
     });
 
     // Menu

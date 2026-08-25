@@ -4,13 +4,20 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Masuk &mdash; {{ setting('app_name', config('app.name')) }}</title>
+    <link rel="icon" href="{{ setting_file('app_favicon') ?: asset('favicon.ico') }}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2.0/dist/css/adminlte.min.css">
 </head>
 <body class="hold-transition login-page">
 <div class="login-box">
     <div class="login-logo">
+        @if ($logo = setting_file('app_logo'))
+            <img src="{{ $logo }}" alt="Logo" class="d-block mx-auto mb-2" style="max-height: 72px">
+        @endif
         <b>{{ setting('app_name', config('app.name')) }}</b>
+        @if ($perusahaan = setting('company_name'))
+            <div class="text-muted" style="font-size: 14px">{{ $perusahaan }}</div>
+        @endif
     </div>
 
     <div class="card">

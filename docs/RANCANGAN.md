@@ -146,28 +146,30 @@ bawaan Laravel masih terpasang di `package.json` tapi tidak dipakai.
 
 ```
 app/
-├── Helpers/settings.php          # helper setting(), terdaftar di composer autoload.files
+├── Helpers/settings.php          # setting(), setting_file(); terdaftar di composer autoload.files
 ├── Http/
 │   ├── Controllers/
-│   │   ├── Admin/{UserController, RoleController, MenuController}.php
+│   │   ├── Admin/{UserController, RoleController, MenuController, SettingController}.php
 │   │   ├── Auth/LoginController.php
 │   │   └── DashboardController.php
 │   ├── Middleware/
 │   │   ├── CheckPermission.php   # alias: permission
 │   │   └── EnsureUserIsActive.php# alias: active
 │   └── Requests/
-│       ├── Admin/{UserRequest, RoleRequest, MenuRequest}.php
+│       ├── Admin/{UserRequest, RoleRequest, MenuRequest, SettingRequest}.php
 │       └── Auth/LoginRequest.php
-├── Models/                       # User, Role, Permission, Menu
+├── Models/                       # User, Role, Permission, Menu, Setting
 └── Services/
     ├── MenuService.php           # pohon sidebar + cache
+    ├── SettingService.php        # baca/simpan pengaturan + unggahan logo
     ├── Form/                     # FormService, FormRenderer, FormValidator (belum)
     └── Report/                   # ReportService, ReportQueryBuilder, ReportExporter (belum)
 
 resources/views/
 ├── layouts/adminlte/{app.blade.php, partials/}
 ├── auth/login.blade.php
-├── dashboard/, forms/, reports/, admin/
+├── dashboard/, forms/, reports/, admin/   # admin/settings/ = halaman Pengaturan
+├── exports/letterhead.blade.php  # kop perusahaan, dipakai halaman cetak dan PDF
 └── components/{form/, report/}
 ```
 
@@ -752,6 +754,56 @@ drag & drop. Chart.js hanya dimuat bila ada widget grafik.
 
 `MetadataSeeder` mengisi dua widget bawaan (jumlah pengguna dan role) — angka yang dulu
 di-hardcode, kini bisa disunting atau dibuang.
+
+## 11o. Pengaturan Aplikasi
+
+Route `settings`, dijaga permission `system.setting`. Identitas aplikasi — nama, logo,
+favicon, identitas perusahaan, warna tema, dan kop cetak — disimpan sebagai baris di
+tabel `settings`, bukan di `config/` maupun `.env`.
+
+**Halamannya digambar dari isi tabelnya sendiri.** Migrasi `2026_08_25_100010` menambah
+tiga kolom yang sebelumnya tidak ada: `input_type` (bentuk isian), `options` (pilihan
+untuk `select`), dan `order_no`. `value_type` saja tidak cukup memilih bentuk isian —
+teks satu baris, area teks, dan daftar pilihan sama-sama bertipe `string`.
+
+Akibatnya, **menambah pengaturan baru cukup dengan menambah satu baris di
+`MetadataSeeder`**: controller, request, dan view tidak ikut berubah. Aturan validasinya
+pun disusun dari metadata (`SettingRequest`): `integer` menolak nol dan negatif, baris
+yang punya `options` divalidasi dengan `Rule::in`, berkas dibatasi gambar 1 MB.
+
+| Kelompok | Isi |
+|---|---|
+| `general` | nama aplikasi, logo, favicon, format tanggal, baris per halaman, teks footer |
+| `company` | nama, alamat, telepon, email, situs, NPWP, logo perusahaan |
+| `appearance` | warna sidebar dan navbar (kelas AdminLTE) |
+| `print` | saklar kop perusahaan dan catatan kaki cetak |
+| `security` | `allow_raw_query` |
+
+**Nilai warna tema masuk ke atribut `class` HTML**, karena itu isiannya dibatasi daftar
+pilihan — tidak ada teks bebas yang bisa menyelinap ke markup.
+
+**Kunci asing dari request diabaikan, bukan dibuat.** Daftar pengaturan yang sah hanya
+yang ada di tabel; `SettingService` menyapu baris yang terdaftar, bukan isi request.
+Kunci yang tidak ikut terkirim juga dibiarkan apa adanya, supaya kiriman sebagian tidak
+mengosongkan pengaturan yang tak disentuh.
+
+**String kosong disimpan sebagai `NULL`.** Pemanggil selalu menulis
+`setting('app_name', config('app.name'))`, dan helper mengembalikan nilai bawaan hanya
+bila nilainya `null` — bukan bila berisi teks kosong.
+
+Berkas diunggah ke disk `public` dengan nama yang dibuat ulang, tidak memakai nama dari
+klien. SVG ditolak: berkas itu bisa memuat skrip dan disajikan dari origin yang sama
+dengan aplikasi. Logo lama dibuang saat diganti maupun dihapus.
+
+Satu penyimpanan menghasilkan satu baris `activity_logs` berisi kunci yang berubah saja,
+lengkap dengan nilai lama dan barunya, lalu cache `settings.all` dibuang — perubahan
+langsung berlaku tanpa `cache:clear`.
+
+Pengaturan ini dipakai di sidebar, navbar, footer, halaman masuk, judul tab, favicon,
+kop halaman cetak dan PDF, format kolom tanggal di halaman daftar/report/ekspor, serta
+sebagai jumlah baris bawaan bila form atau report tidak menentukan sendiri. Untuk PDF,
+gambar diambil lewat path berkas (`setting_file_path()`), bukan URL — DomPDF membaca
+gambar dari sistem berkas.
 
 ## 12. Hal yang belum ditangani
 

@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 
 if (! function_exists('setting')) {
     /**
@@ -51,5 +52,32 @@ if (! function_exists('setting_flush')) {
     function setting_flush(): void
     {
         Cache::forget('settings.all');
+    }
+}
+
+if (! function_exists('setting_file')) {
+    /**
+     * URL publik berkas pengaturan (logo, favicon), atau null bila belum diunggah.
+     */
+    function setting_file(string $key): ?string
+    {
+        $path = setting($key);
+
+        return $path ? Storage::disk('public')->url($path) : null;
+    }
+}
+
+if (! function_exists('setting_file_path')) {
+    /**
+     * Path berkas di disk, untuk pemakai yang tidak bisa mengambil URL —
+     * DomPDF membaca gambar lewat sistem berkas, bukan HTTP.
+     */
+    function setting_file_path(string $key): ?string
+    {
+        $path = setting($key);
+
+        return $path && Storage::disk('public')->exists($path)
+            ? Storage::disk('public')->path($path)
+            : null;
     }
 }

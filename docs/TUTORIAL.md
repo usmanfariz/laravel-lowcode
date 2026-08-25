@@ -405,6 +405,39 @@ Tabel log tumbuh tanpa batas. Pakai **Buang log lebih tua dari … hari** secara
 
 ---
 
+## 10. Pengaturan aplikasi
+
+**Sistem → Pengaturan**
+
+Identitas aplikasi diatur dari sini, bukan dari berkas konfigurasi. Perubahan langsung
+berlaku di seluruh halaman.
+
+| Tab | Isi |
+|---|---|
+| **Aplikasi** | Nama aplikasi, logo, favicon, format tanggal, baris per halaman, teks footer |
+| **Perusahaan** | Nama, alamat, telepon, email, situs, NPWP, dan logo untuk kop cetak |
+| **Tampilan** | Warna sidebar dan navbar |
+| **Cetak & Ekspor** | Saklar kop perusahaan dan catatan kaki pada halaman cetak dan PDF |
+| **Keamanan** | Izin memakai mode raw query di Report Builder |
+
+**Nama aplikasi** muncul di judul tab peramban, sidebar, footer, dan halaman masuk.
+**Logo** tampil di sidebar dan halaman masuk; bila dikosongkan, ikon bawaan yang dipakai.
+Berkas yang diterima PNG, JPG, GIF, atau WEBP, maksimal 1 MB — SVG sengaja ditolak karena
+bisa memuat skrip.
+
+**Format tanggal** dan **baris per halaman** berlaku sebagai nilai bawaan. Form atau
+report yang sudah menentukan sendiri jumlah barisnya tidak ikut berubah.
+
+**Identitas perusahaan** dipakai sebagai kop di halaman cetak dan PDF. Kop bisa dimatikan
+lewat tab Cetak & Ekspor. Bila logo perusahaan kosong, logo aplikasi yang dipakai.
+
+Setiap penyimpanan tercatat di Log Aktivitas lengkap dengan nilai lama dan barunya.
+
+**Menambah pengaturan baru** tidak menuntut perubahan kode: tambahkan satu baris di
+`MetadataSeeder`, jalankan ulang seedernya, dan isiannya muncul sendiri di halaman ini.
+
+---
+
 ## Masalah yang sering muncul
 
 **Form baru menampilkan 403.**

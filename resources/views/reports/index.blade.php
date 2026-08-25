@@ -126,7 +126,7 @@ $(function () {
         processing: true,
         serverSide: true,
         searching: true,
-        pageLength: {{ $report->per_page ?: 25 }},
+        pageLength: {{ $report->per_page ?: setting('per_page', 25) }},
         order: [],
         ajax: {
             url: '{{ url("reports/{$report->code}/data") }}',

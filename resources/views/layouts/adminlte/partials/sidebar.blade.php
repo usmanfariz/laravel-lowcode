@@ -1,6 +1,10 @@
-<aside class="main-sidebar sidebar-dark-primary elevation-4">
+<aside class="main-sidebar {{ setting('sidebar_skin', 'sidebar-dark-primary') }} elevation-4">
     <a href="{{ route('dashboard') }}" class="brand-link">
-        <i class="fas fa-cubes brand-image ml-3 mr-2"></i>
+        @if ($logo = setting_file('app_logo'))
+            <img src="{{ $logo }}" alt="Logo" class="brand-image img-circle elevation-3" style="opacity: .9">
+        @else
+            <i class="fas fa-cubes brand-image ml-3 mr-2"></i>
+        @endif
         <span class="brand-text font-weight-light">{{ setting('app_name', config('app.name')) }}</span>
     </a>
 

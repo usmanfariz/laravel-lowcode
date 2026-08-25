@@ -8,13 +8,13 @@ use App\Models\Form;
 use App\Models\Report;
 use App\Services\ExportService;
 use App\Services\Form\FormQueryBuilder;
-use App\Services\Report\ReportFilterRenderer;
 use App\Services\Report\ReportQueryBuilder;
-use App\Services\Report\ReportService;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
 
 /**
@@ -154,7 +154,7 @@ class GenerateExport implements ShouldQueue
 
     private function write(ExportJob $job, array $headings, array $rows, array $totals): string
     {
-        $name = 'exports/'.$job->id.'-'.\Illuminate\Support\Str::slug($job->title).'.'.$job->format;
+        $name = 'exports/'.$job->id.'-'.Str::slug($job->title).'.'.$job->format;
 
         if ($totals !== []) {
             $line = array_fill(0, count($headings), '');
@@ -212,8 +212,8 @@ class GenerateExport implements ShouldQueue
             'decimal' => number_format((float) $value, $decimals, ',', '.'),
             'currency' => 'Rp '.number_format((float) $value, $decimals, ',', '.'),
             'percentage' => number_format((float) $value, $decimals, ',', '.').'%',
-            'date' => \Carbon\Carbon::parse($value)->format('d/m/Y'),
-            'datetime' => \Carbon\Carbon::parse($value)->format('d/m/Y H:i'),
+            'date' => Carbon::parse($value)->format(setting('date_format', 'd/m/Y')),
+            'datetime' => Carbon::parse($value)->format(setting('date_format', 'd/m/Y').' H:i'),
             'boolean' => $value ? 'Ya' : 'Tidak',
             default => (string) $value,
         };

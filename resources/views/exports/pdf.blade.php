@@ -16,9 +16,11 @@
     </style>
 </head>
 <body>
+    @include('exports.letterhead', ['pdf' => true])
+
     <h1>{{ $title }}</h1>
     <div class="meta">
-        Dicetak {{ now()->format('d/m/Y H:i') }}
+        Dicetak {{ now()->format(setting('date_format', 'd/m/Y').' H:i') }}
         @auth oleh {{ auth()->user()->name }} @endauth
         &mdash; {{ count($rows) }} baris
     </div>
@@ -49,5 +51,9 @@
             @endif
         </tbody>
     </table>
+
+    @if ($catatan = setting('print_footer_note'))
+        <div class="meta" style="margin-top: 8px">{{ $catatan }}</div>
+    @endif
 </body>
 </html>

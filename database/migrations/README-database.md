@@ -49,6 +49,13 @@ bukan `category_id`) atau ekspresi, sehingga tidak selalu punya pasangan di
 dikunci: hanya role dengan permission `system.raw_query`, dan wajib divalidasi
 SELECT-only sebelum disimpan. Setting `security.allow_raw_query` default mati.
 
+**`settings` menggambarkan halamannya sendiri.** Selain nilai dan `value_type`,
+tiap baris membawa `input_type`, `options`, dan `order_no` (migrasi
+`2026_08_25_100010`) — cukup untuk menggambar isiannya di halaman Pengaturan
+tanpa kode tambahan. `value_type` saja tidak memadai: teks satu baris, area
+teks, dan daftar pilihan sama-sama bertipe `string`. Menambah pengaturan baru
+berarti menambah satu baris di seeder, bukan menyunting controller dan view.
+
 **Row-level access** memakai pasangan `roles.data_scope` dan
 `forms.scope_column` / `reports.scope_column`, dibandingkan dengan
 `users.scope_value`.

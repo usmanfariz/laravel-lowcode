@@ -116,7 +116,7 @@ $(function () {
         processing: true,
         serverSide: true,
         ajax: '{{ url("forms/{$form->code}/data") }}',
-        pageLength: {{ $form->per_page ?: 25 }},
+        pageLength: {{ $form->per_page ?: setting('per_page', 25) }},
         order: [],
         columns: [
             @if ($bulkActions)

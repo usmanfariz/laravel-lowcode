@@ -3,11 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Report;
+use App\Services\ExportService;
 use App\Services\Report\ReportChartBuilder;
 use App\Services\Report\ReportFilterRenderer;
 use App\Services\Report\ReportQueryBuilder;
-use App\Services\ExportService;
 use App\Services\Report\ReportService;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -222,7 +223,7 @@ class ReportController extends Controller
 
             $rows = $query
                 ->skip(max(0, (int) $request->input('start', 0)))
-                ->take(min(max(1, (int) $request->input('length', $report->per_page ?: 25)), 500))
+                ->take(min(max(1, (int) $request->input('length', $report->per_page ?: setting('per_page', 25))), 500))
                 ->get();
         } catch (\RuntimeException $e) {
             return response()->json(['error' => $e->getMessage()], 422);
@@ -308,8 +309,8 @@ class ReportController extends Controller
             'decimal' => number_format((float) $value, $decimals, ',', '.'),
             'currency' => 'Rp '.number_format((float) $value, $decimals, ',', '.'),
             'percentage' => number_format((float) $value, $decimals, ',', '.').'%',
-            'date' => \Carbon\Carbon::parse($value)->format('d/m/Y'),
-            'datetime' => \Carbon\Carbon::parse($value)->format('d/m/Y H:i'),
+            'date' => Carbon::parse($value)->format(setting('date_format', 'd/m/Y')),
+            'datetime' => Carbon::parse($value)->format(setting('date_format', 'd/m/Y').' H:i'),
             'boolean' => (bool) $value,
             default => e((string) $value),
         };

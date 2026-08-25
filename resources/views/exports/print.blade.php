@@ -18,9 +18,11 @@
         <button class="btn btn-default btn-sm" onclick="window.close()">Tutup</button>
     </div>
 
+    @include('exports.letterhead')
+
     <h4 class="mb-1">{{ $title }}</h4>
     <p class="text-muted small">
-        Dicetak {{ now()->format('d/m/Y H:i') }}
+        Dicetak {{ now()->format(setting('date_format', 'd/m/Y').' H:i') }}
         @auth oleh {{ auth()->user()->name }} @endauth
         &mdash; {{ count($rows) }} baris
     </p>
@@ -42,6 +44,10 @@
             @endif
         </tbody>
     </table>
+
+    @if ($catatan = setting('print_footer_note'))
+        <p class="text-muted small mt-3 mb-0">{{ $catatan }}</p>
+    @endif
 
     <script>window.addEventListener('load', () => setTimeout(() => window.print(), 300));</script>
 </body>

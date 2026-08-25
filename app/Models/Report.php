@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
-    'code', 'name', 'title', 'description', 'type', 'source_type',
+    'code', 'name', 'title', 'description', 'type', 'chart_type', 'chart_limit', 'source_type',
     'connection', 'base_table', 'base_alias', 'use_soft_delete', 'raw_query', 'group_by', 'having',
     'default_order_column', 'default_order_direction', 'per_page',
     'scope_column', 'permission_code', 'allow_export_excel', 'allow_export_pdf',

@@ -120,6 +120,7 @@ Route::middleware(['auth', 'active'])->group(function () {
     // Report dinamis
     Route::get('reports/{code}', [ReportController::class, 'index'])->name('reports.index');
     Route::get('reports/{code}/data', [ReportController::class, 'data'])->name('reports.data');
+    Route::get('reports/{code}/chart', [ReportController::class, 'chart'])->name('reports.chart');
     Route::get('reports/{code}/export/{format}', [ReportController::class, 'export'])
         ->whereIn('format', ['xlsx', 'csv', 'pdf', 'print'])->name('reports.export');
 

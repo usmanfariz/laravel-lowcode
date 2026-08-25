@@ -260,6 +260,24 @@ biasa tanpa satu pun yang ditandai, kolom biasanya dikelompokkan otomatis — `C
 berdampingan dengan `nama` memang hanya berarti "hitung per nama". Menandainya sendiri
 tetap lebih baik: Anda yang menentukan, bukan sistem yang menebak.
 
+### Grafik
+
+Setel **Tipe** report ke *Grafik* di tab Pengaturan, lalu pilih bentuknya — batang tegak,
+batang mendatar, garis, area, lingkaran, atau donat.
+
+Tidak ada yang perlu didefinisikan ulang: label diambil dari **kolom pengelompokan**, dan
+nilainya dari **kolom berformat angka** (Angka, Desimal, Mata uang, Persen). Kolom
+berformat teks tidak bisa digambar, jadi tidak ikut.
+
+Grafik muncul **di atas tabel**, bukan menggantikan — angka pastinya sering tetap
+dibutuhkan. Filter yang sedang berlaku ikut diterapkan.
+
+**Maksimal Batang/Titik** menjaga grafik tetap terbaca. Bila datanya lebih banyak,
+halaman menyebutkannya dan sisanya tetap ada di tabel.
+
+> Kalau grafik tidak muncul, halaman akan menyebutkan alasannya — biasanya belum ada
+> kolom pengelompokan, atau kolom nilainya masih berformat teks.
+
 ### Tab Filter
 
 Setiap filter punya kolom, operator, dan jenis masukan.

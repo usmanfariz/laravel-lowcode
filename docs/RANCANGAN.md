@@ -642,7 +642,7 @@ pesan yang muncul memakai istilah yang dikenal pengguna:
 
 ## 11k. Test Otomatis
 
-`php artisan test` — **182 test, ~5 detik.** 161 berjalan di SQLite; 21 sisanya butuh MySQL
+`php artisan test` — **196 test, ~5 detik.** 175 berjalan di SQLite; 21 sisanya butuh MySQL
 dan **dilewati otomatis** bila database ujinya belum disiapkan.
 
 | Berkas | Cakupan |
@@ -659,6 +659,7 @@ dan **dilewati otomatis** bila database ujinya belum disiapkan.
 | `tests/Feature/ReportCountMysqlTest.php` | **butuh MySQL** — penghitung baris report beragregat ber-join |
 | `tests/Feature/FormActionRendererTest.php` | URL aksi, penyaringan izin, kondisi tampil |
 | `tests/Unit/CodeImageGeneratorTest.php` | barcode & QR: SVG sah, deterministik, URL kanonik |
+| `tests/Feature/ReportChartTest.php` | label & deret grafik, nilai mentah, alasan bila tak bisa digambar |
 
 **Suite berjalan di SQLite** (bawaan `phpunit.xml`), jadi tidak perlu menyiapkan
 database apa pun. `tests/MetadataTestCase.php` membuat tabel bisnis kecil sendiri —
@@ -691,6 +692,34 @@ Trait `App\Support\DropsNullDefaults` membuang kunci yang bernilai null sebelum
 disimpan, sehingga database memakai nilai bawaannya — yang memang itulah maksud
 "boleh dikosongkan". Dipakai di ketiga controller builder yang menulis kolom-kolom
 tersebut.
+
+## 11m. Report bertipe grafik
+
+`reports.type = 'chart'` menggambar grafik **di atas tabelnya**, bukan menggantikan —
+angka pastinya sering tetap dibutuhkan.
+
+Tidak ada metadata terpisah untuk grafik selain bentuk (`chart_type`) dan batas baris
+(`chart_limit`), keduanya ditambahkan migrasi `2026_08_25_100008`:
+
+- **Label** diambil dari kolom pengelompokan; bila tidak ada, dari kolom non-agregat
+  pertama yang tampil.
+- **Deret nilai** dari kolom berformat angka (`number`, `decimal`, `currency`,
+  `percentage`). Kolom teks tidak bisa digambar, jadi tidak ikut.
+- **Nilai yang dipakai mentah**, bukan yang sudah diformat — `"Rp 12.500,00"` bukan
+  angka.
+
+Report yang sudah masuk akal sebagai ringkasan otomatis masuk akal pula sebagai grafik,
+sehingga tidak perlu mendefinisikan ulang apa pun.
+
+**Bila belum bisa digambar**, halaman menampilkan alasannya — kolom label belum ada,
+tidak ada kolom angka, atau report bermode `raw` — bukan kanvas kosong yang menyesatkan.
+
+Filter yang sedang berlaku ikut diterapkan pada grafik. Batas baris menjaga grafik tetap
+terbaca; bila terpotong, halaman menyebutkannya dan sisanya tetap ada di tabel.
+Chart.js hanya dimuat pada report bertipe grafik.
+
+> **`crosstab` belum diimplementasikan.** Nilainya ada di enum `reports.type` sejak awal
+> tapi tetap digambar sebagai tabel biasa.
 
 ## 12. Hal yang belum ditangani
 

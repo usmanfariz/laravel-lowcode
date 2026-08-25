@@ -116,7 +116,7 @@ class ReportBuilderController extends Controller
             'allow_export_csv' => $request->boolean('allow_export_csv'),
             'allow_print' => $request->boolean('allow_print'),
             'is_active' => $request->boolean('is_active'),
-        ], ['export_queue_threshold']);
+        ], ['export_queue_threshold', 'chart_type', 'chart_limit']);
     }
 
     /**

@@ -32,6 +32,7 @@ punya — hak DDL.
 | **Generator CRUD** | Pilih tabel → form, halaman daftar, validasi, dan permission dibuat otomatis dari struktur kolom |
 | **Form Builder** | Sunting field, kolom daftar, baris detail, tombol aksi, dan tata letak visual; setiap perubahan terekam dan bisa dikembalikan |
 | **Report Builder** | Join, agregat, `GROUP BY`, filter dengan 13 operator, semuanya lewat UI |
+| **Grafik** | Report bertipe grafik: batang, garis, area, lingkaran, donat — di atas tabelnya |
 | **Master-detail** | Satu induk dengan banyak baris anak dalam satu form |
 | **Hak akses** | Role, permission per aksi, dan pembatasan data per baris (row-level scope) |
 | **Ekspor** | Excel, CSV, PDF, dan Cetak; data besar otomatis dikerjakan di latar belakang |
@@ -101,7 +102,7 @@ Penjadwal membuang berkas ekspor yang lewat masa simpan. Tambahkan satu entri cr
 php artisan test
 ```
 
-182 test. Sebagian besar berjalan di SQLite in-memory tanpa persiapan apa pun.
+196 test. Sebagian besar berjalan di SQLite in-memory tanpa persiapan apa pun.
 
 21 test menyentuh perilaku yang hanya muncul di MySQL (`information_schema`, kolom
 `ENUM`, penolakan nama kolom ganda pada derived table) dan **dilewati otomatis** sampai
@@ -124,7 +125,7 @@ sudo mysql -e "CREATE DATABASE laravel_lowcode_test
 ## Teknologi
 
 Laravel 13 · MySQL · AdminLTE 3 · Bootstrap 4 · jQuery · DataTables · Select2 ·
-Laravel Excel · DomPDF · picqer/php-barcode-generator · bacon/bacon-qr-code
+Chart.js · Laravel Excel · DomPDF · picqer/php-barcode-generator · bacon/bacon-qr-code
 
 Aset frontend dimuat lewat CDN, jadi tidak perlu Node.js untuk menjalankan aplikasi.
 

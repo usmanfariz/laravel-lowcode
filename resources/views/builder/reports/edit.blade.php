@@ -50,6 +50,33 @@
                         <textarea name="description" rows="2" class="form-control">{{ old('description', $report->description) }}</textarea>
                     </div>
 
+                    <div class="row" id="grp-chart">
+                        <div class="col-md-6 form-group">
+                            <label>Bentuk Grafik</label>
+                            <select name="chart_type" class="form-control">
+                                @foreach ([
+                                    'bar' => 'Batang tegak', 'horizontal_bar' => 'Batang mendatar',
+                                    'line' => 'Garis', 'area' => 'Area',
+                                    'pie' => 'Lingkaran', 'doughnut' => 'Donat',
+                                ] as $v => $l)
+                                    <option value="{{ $v }}" @selected(old('chart_type', $report->chart_type) === $v)>{{ $l }}</option>
+                                @endforeach
+                            </select>
+                            <small class="form-text text-muted">
+                                Label diambil dari kolom pengelompokan, nilainya dari kolom
+                                berformat angka. Tabel tetap tampil di bawah grafik.
+                            </small>
+                        </div>
+                        <div class="col-md-6 form-group">
+                            <label>Maksimal Batang/Titik</label>
+                            <input type="number" name="chart_limit" class="form-control" min="1" max="200"
+                                   value="{{ old('chart_limit', $report->chart_limit) }}">
+                            <small class="form-text text-muted">
+                                Grafik dengan ratusan batang tidak terbaca; sisanya tetap ada di tabel.
+                            </small>
+                        </div>
+                    </div>
+
                     <div class="row">
                         <div class="col-md-6 form-group">
                             <label>Urut Berdasarkan</label>
@@ -231,6 +258,11 @@ $(function () {
     const sync = () => $('#grp-raw').toggle($('#source_type').val() === 'raw');
     $('#source_type').on('change', sync);
     sync();
+
+    // Setelan grafik hanya relevan bila tipenya memang grafik.
+    const syncChart = () => $('#grp-chart').toggle($('select[name=type]').val() === 'chart');
+    $('select[name=type]').on('change', syncChart);
+    syncChart();
 
     $('.js-restore').on('click', function () {
         const version = $(this).data('version');

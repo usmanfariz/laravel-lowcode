@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Report;
+use App\Services\Report\ReportChartBuilder;
 use App\Services\Report\ReportFilterRenderer;
 use App\Services\Report\ReportQueryBuilder;
 use App\Services\ExportService;
@@ -20,6 +21,7 @@ class ReportController extends Controller
         private readonly ReportQueryBuilder $builder,
         private readonly ReportFilterRenderer $filters,
         private readonly ExportService $export,
+        private readonly ReportChartBuilder $charts,
     ) {}
 
     /**
@@ -154,7 +156,34 @@ class ReportController extends Controller
             'filters' => $this->reports->visibleFilters($report),
             'renderer' => $this->filters,
             'columns' => $report->columns->where('is_visible', true)->values(),
+            // Alasan grafik tak bisa digambar ditampilkan apa adanya, supaya
+            // pengguna tahu apa yang kurang alih-alih melihat kanvas kosong.
+            'chartUnavailable' => $report->type === 'chart'
+                ? $this->charts->reasonUnavailable($report)
+                : null,
         ]);
+    }
+
+    /** Data grafik: label, deret nilai mentah, dan penanda bila terpotong. */
+    public function chart(Request $request, string $code): JsonResponse
+    {
+        $report = $this->reports->byCode($code);
+        $this->authorizeReport($request, $report);
+
+        if ($alasan = $this->charts->reasonUnavailable($report)) {
+            return response()->json(['error' => $alasan], 422);
+        }
+
+        try {
+            return response()->json($this->charts->data(
+                $report,
+                $request->user(),
+                $this->filterInput($request),
+                $request->input('search.value') ?? $request->input('search'),
+            ));
+        } catch (\RuntimeException $e) {
+            return response()->json(['error' => $e->getMessage()], 422);
+        }
     }
 
     /** Endpoint server-side DataTables. */

@@ -30,6 +30,10 @@ class ReportSettingRequest extends FormRequest
             'title' => ['nullable', 'string', 'max:150'],
             'description' => ['nullable', 'string', 'max:255'],
             'type' => ['required', Rule::in(['table', 'summary', 'crosstab', 'chart'])],
+            'chart_type' => ['nullable', Rule::in([
+                'bar', 'horizontal_bar', 'line', 'area', 'pie', 'doughnut',
+            ])],
+            'chart_limit' => ['nullable', 'integer', 'min:1', 'max:200'],
             'source_type' => ['required', Rule::in(['builder', 'raw'])],
             'raw_query' => ['nullable', 'string', 'max:65535'],
             'group_by' => ['nullable', 'string', 'max:255'],

@@ -178,6 +178,11 @@ JSON, mis. `{"status": "draft"}`.)
 Aturan yang ditegakkan: aksi selain GET **wajib** punya pesan konfirmasi, dan aksi
 massal tidak boleh memakai GET.
 
+Form demo `product` sudah punya tiga contoh yang bisa langsung dicoba — Setujui
+(per baris, hanya muncul pada status draft), Arsipkan (massal), dan Cetak Label
+(toolbar). Endpoint-nya ada di `App\Http\Controllers\Demo\ProductActionController`,
+contoh bagaimana aksi semacam itu dipasang di aplikasi Anda sendiri.
+
 ---
 
 ## 4. Atur hak akses

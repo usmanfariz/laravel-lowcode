@@ -197,6 +197,47 @@ class BuilderGuardTest extends MetadataTestCase
         $this->actingAs($biasa)->get('/activity-logs')->assertForbidden();
     }
 
+    // ---------------- nilai bawaan skema ----------------
+
+    #[Test]
+    public function aksi_tanpa_kelas_css_memakai_nilai_bawaan(): void
+    {
+        // Laravel mengubah masukan kosong jadi null; kolomnya NOT NULL dengan
+        // default, jadi null harus dibuang agar default-nya yang dipakai.
+        $this->actingAs($this->admin)
+            ->post("/builder/forms/{$this->form->id}/actions", [
+                'code' => 'cetak', 'label' => 'Cetak', 'position' => 'toolbar',
+                'action_type' => 'url', 'target_value' => '/x',
+                'http_method' => 'GET', 'order_no' => 1, 'css_class' => null,
+            ])
+            ->assertSessionHasNoErrors();
+
+        $this->assertNotNull(
+            DB::table('form_actions')->where('code', 'cetak')->value('css_class'),
+            'css_class null lolos ke database dan akan ditolak skema'
+        );
+    }
+
+    #[Test]
+    public function detail_tanpa_baris_minimal_memakai_nilai_bawaan(): void
+    {
+        \App\Models\DataSource::where('table_name', 't_categories')->update(['is_writable' => true]);
+        app(\App\Services\DataSourceResolver::class)->flushColumns('t_categories');
+
+        $this->actingAs($this->admin)
+            ->post("/builder/forms/{$this->form->id}/details", [
+                'code' => 'baris', 'title' => 'Baris', 'table_name' => 't_categories',
+                'primary_key' => 'id', 'foreign_key' => 'name', 'order_no' => 1,
+                'min_rows' => null, 'max_rows' => null,
+            ])
+            ->assertSessionHasNoErrors();
+
+        $this->assertNotNull(
+            DB::table('form_details')->where('code', 'baris')->value('min_rows'),
+            'min_rows null lolos ke database'
+        );
+    }
+
     // ---------------- versioning ----------------
 
     #[Test]

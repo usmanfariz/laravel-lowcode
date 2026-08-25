@@ -312,6 +312,12 @@ dibuka. Bila baris sudah berubah sejak itu, penyimpanan **ditolak** dengan pesan
 menyuruh memuat ulang — bukan menimpa pekerjaan orang lain diam-diam. Hanya berlaku
 untuk tabel yang punya `updated_at`.
 
+**Contoh aksi yang bisa dicoba** ada di `App\Http\Controllers\Demo\ProductActionController`
+dan didaftarkan `DemoProductSeeder`: setujui (per baris, dengan kondisi
+`status = draft`), arsipkan (massal), dan cetak label (toolbar). Engine sengaja tidak
+mengurus arti "setujui" atau "arsipkan" — itu urusan aplikasi. Blok route-nya diberi
+prefix `demo/products` dan aman dihapus bersama demo lainnya.
+
 **Tombol aksi** dari `form_actions` digambar di halaman list: `toolbar` di kepala kartu,
 `row` di kolom aksi, `bulk` muncul setelah baris dicentang. `show_condition` dievaluasi
 per baris di klien — nilai kolom yang dibutuhkan dikirim terpisah lewat `__cond` agar
@@ -611,7 +617,7 @@ pesan yang muncul memakai istilah yang dikenal pengguna:
 
 ## 11k. Test Otomatis
 
-`php artisan test` — **152 test, ~4 detik.** 133 berjalan di SQLite; 19 sisanya butuh MySQL
+`php artisan test` — **161 test, ~4 detik.** 142 berjalan di SQLite; 19 sisanya butuh MySQL
 dan **dilewati otomatis** bila database ujinya belum disiapkan.
 
 | Berkas | Cakupan |
@@ -626,6 +632,7 @@ dan **dilewati otomatis** bila database ujinya belum disiapkan.
 | `tests/Feature/TableInspectorTest.php` | **butuh MySQL** — `information_schema`, enum, pemetaan generator |
 | `tests/Feature/SeederIdempotencyTest.php` | seeder aman dijalankan berulang, password & setelan tidak tertimpa |
 | `tests/Feature/ReportCountMysqlTest.php` | **butuh MySQL** — penghitung baris report beragregat ber-join |
+| `tests/Feature/FormActionRendererTest.php` | URL aksi, penyaringan izin, kondisi tampil |
 
 **Suite berjalan di SQLite** (bawaan `phpunit.xml`), jadi tidak perlu menyiapkan
 database apa pun. `tests/MetadataTestCase.php` membuat tabel bisnis kecil sendiri —
@@ -642,6 +649,22 @@ sudo mysql -e "CREATE DATABASE laravel_lowcode_test
 ```
 
 Nama databasenya bisa diganti lewat env `MYSQL_TEST_DATABASE`.
+
+## 11l. Nilai bawaan skema vs masukan kosong
+
+Beberapa kolom metadata bersifat **NOT NULL dengan nilai bawaan**, tapi boleh
+dikosongkan pengguna di builder: `form_actions.css_class`, `form_details.min_rows`,
+`report_columns.decimal_places`, `report_filters.width`, dan
+`reports.export_queue_threshold`.
+
+Laravel mengubah masukan kosong menjadi `null` lewat `ConvertEmptyStringsToNull`,
+sehingga `null` itu ikut masuk `INSERT` dan **ditolak database** — pengguna hanya
+melihat 500 tanpa penjelasan.
+
+Trait `App\Support\DropsNullDefaults` membuang kunci yang bernilai null sebelum
+disimpan, sehingga database memakai nilai bawaannya — yang memang itulah maksud
+"boleh dikosongkan". Dipakai di ketiga controller builder yang menulis kolom-kolom
+tersebut.
 
 ## 12. Hal yang belum ditangani
 

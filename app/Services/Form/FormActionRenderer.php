@@ -85,13 +85,23 @@ class FormActionRenderer
         };
     }
 
+    /**
+     * URL sebuah route, dengan penanda __ID__ hanya bila route-nya memang
+     * berparameter.
+     *
+     * Menyodorkan penanda ke route tanpa parameter membuat Laravel
+     * menempelkannya sebagai query string (`/aksi?__ID__`) — bukan kesalahan
+     * fatal, tapi URL-nya jadi salah dan menyesatkan.
+     */
     private function routeUrl(string $name): string
     {
+        $route = \Route::getRoutes()->getByName($name);
+        $parameters = $route ? $route->parameterNames() : [];
+
         try {
-            // Route berparameter diberi penanda; yang tanpa parameter dipakai apa adanya.
-            return route($name, ['__ID__']);
+            return $parameters === [] ? route($name) : route($name, ['__ID__']);
         } catch (\Throwable) {
-            return route($name);
+            return '#';
         }
     }
 }

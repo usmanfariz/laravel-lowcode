@@ -10,6 +10,7 @@ use App\Models\FormAction;
 use App\Models\FormDetail;
 use App\Services\Form\FormBuilderService;
 use App\Services\Generator\TableInspector;
+use App\Support\DropsNullDefaults;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -24,6 +25,8 @@ use Illuminate\View\View;
  */
 class FormPartController extends Controller
 {
+    use DropsNullDefaults;
+
     public function __construct(
         private readonly FormBuilderService $builder,
         private readonly TableInspector $inspector,
@@ -176,21 +179,21 @@ class FormPartController extends Controller
 
     private function detailValues(FormDetailRequest $request): array
     {
-        return [
+        return $this->dropNullDefaults([
             ...$request->safe()->all(),
             'allow_add' => $request->boolean('allow_add'),
             'allow_delete' => $request->boolean('allow_delete'),
             'show_total_row' => $request->boolean('show_total_row'),
             'is_active' => $request->boolean('is_active'),
-        ];
+        ], ['min_rows']);
     }
 
     private function actionValues(FormActionRequest $request): array
     {
-        return [
+        return $this->dropNullDefaults([
             ...$request->safe()->all(),
             'is_active' => $request->boolean('is_active'),
-        ];
+        ], ['css_class']);
     }
 
     private function assertOwned(Form $form, int $formId): void

@@ -12,6 +12,7 @@ use App\Models\ReportFilter;
 use App\Models\ReportJoin;
 use App\Services\Generator\TableInspector;
 use App\Services\Report\ReportBuilderService;
+use App\Support\DropsNullDefaults;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -26,6 +27,8 @@ use Illuminate\View\View;
  */
 class ReportPartController extends Controller
 {
+    use DropsNullDefaults;
+
     public function __construct(
         private readonly ReportBuilderService $builder,
         private readonly ReportBuilderController $reports,
@@ -236,7 +239,7 @@ class ReportPartController extends Controller
             $data['expression'] = null;
         }
 
-        return [
+        return $this->dropNullDefaults([
             ...$data,
             'is_visible' => $request->boolean('is_visible'),
             'is_sortable' => $request->boolean('is_sortable'),
@@ -244,7 +247,7 @@ class ReportPartController extends Controller
             'is_group_column' => $request->boolean('is_group_column'),
             'show_total' => $request->boolean('show_total'),
             'is_active' => $request->boolean('is_active'),
-        ];
+        ], ['decimal_places']);
     }
 
     private function filterValues(ReportFilterRequest $request): array
@@ -257,13 +260,13 @@ class ReportPartController extends Controller
 
         $defaults = $request->defaultValues();
 
-        return [
+        return $this->dropNullDefaults([
             ...$data,
             'static_options' => ($options = $request->staticOptions()) ? json_encode($options) : null,
             'default_values' => $defaults ? json_encode($defaults) : null,
             'is_required' => $request->boolean('is_required'),
             'is_active' => $request->boolean('is_active'),
-        ];
+        ], ['width']);
     }
 
     private function assertOwned(Report $report, int $reportId): void

@@ -8,6 +8,7 @@ use App\Models\Report;
 use App\Services\DataSourceResolver;
 use App\Services\Generator\TableInspector;
 use App\Services\Report\ReportBuilderService;
+use App\Support\DropsNullDefaults;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -15,6 +16,8 @@ use Illuminate\View\View;
 
 class ReportBuilderController extends Controller
 {
+    use DropsNullDefaults;
+
     public function __construct(
         private readonly ReportBuilderService $builder,
         private readonly TableInspector $inspector,
@@ -105,7 +108,7 @@ class ReportBuilderController extends Controller
 
     private function values(ReportSettingRequest $request): array
     {
-        return [
+        return $this->dropNullDefaults([
             ...$request->safe()->except('note'),
             'use_soft_delete' => $request->boolean('use_soft_delete'),
             'allow_export_excel' => $request->boolean('allow_export_excel'),
@@ -113,7 +116,7 @@ class ReportBuilderController extends Controller
             'allow_export_csv' => $request->boolean('allow_export_csv'),
             'allow_print' => $request->boolean('allow_print'),
             'is_active' => $request->boolean('is_active'),
-        ];
+        ], ['export_queue_threshold']);
     }
 
     /**

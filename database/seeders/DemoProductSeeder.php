@@ -37,7 +37,8 @@ class DemoProductSeeder extends Seeder
         }
 
         // --- permission mengikuti konvensi <prefix>.<action> ---
-        foreach (['view', 'create', 'edit', 'delete', 'export', 'print'] as $action) {
+        // 'approve' bukan aksi bawaan engine; ia menyertai tombol aksi contoh.
+        foreach (['view', 'create', 'edit', 'delete', 'export', 'print', 'approve'] as $action) {
             DB::table('permissions')->updateOrInsert(
                 ['code' => "product.{$action}"],
                 [
@@ -159,6 +160,33 @@ class DemoProductSeeder extends Seeder
                 'is_visible' => true, 'is_searchable' => $searchable, 'is_sortable' => $sortable,
                 'order_no' => ++$order,
             ]);
+        }
+
+        // --- tombol aksi contoh ---
+        // Menunjuk route di App\Http\Controllers\Demo\ProductActionController.
+        $actions = [
+            ['approve', 'Setujui', 'fas fa-check', 'row', 'route', 'demo.products.approve',
+                'POST', 'Setujui produk ini?', 'btn-success', 'product.approve',
+                json_encode(['status' => 'draft']), 1],
+            ['arsipkan', 'Arsipkan', 'fas fa-archive', 'bulk', 'route', 'demo.products.archive',
+                'POST', 'Arsipkan semua produk yang dipilih?', 'btn-warning', 'product.edit',
+                null, 2],
+            ['cetak_label', 'Cetak Label', 'fas fa-tags', 'toolbar', 'route', 'demo.products.labels',
+                'GET', null, 'btn-default', 'product.print', null, 3],
+        ];
+
+        foreach ($actions as [$code, $label, $icon, $position, $type, $target,
+            $method, $confirm, $css, $permission, $condition, $order]) {
+            DB::table('form_actions')->updateOrInsert(
+                ['form_id' => $formId, 'code' => $code],
+                [
+                    'label' => $label, 'icon' => $icon, 'position' => $position,
+                    'action_type' => $type, 'target_value' => $target,
+                    'http_method' => $method, 'permission_code' => $permission,
+                    'confirm_message' => $confirm, 'show_condition' => $condition,
+                    'css_class' => $css, 'order_no' => $order, 'is_active' => true,
+                ]
+            );
         }
 
         DB::table('menus')->updateOrInsert(

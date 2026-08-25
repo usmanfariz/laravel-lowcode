@@ -96,6 +96,18 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::delete('exports/{exportJob}', [ExportJobController::class, 'destroy'])
         ->whereNumber('exportJob')->name('exports.destroy');
 
+    // CONTOH — endpoint untuk tombol aksi form demo `product`.
+    // Engine sengaja tidak mengurus arti "setujui" atau "arsipkan"; itu urusan
+    // aplikasi. Blok ini aman dihapus bersama migrasi dan seeder demo.
+    Route::prefix('demo/products')->name('demo.products.')->group(function () {
+        Route::post('approve', [\App\Http\Controllers\Demo\ProductActionController::class, 'approve'])
+            ->middleware('permission:product.approve')->name('approve');
+        Route::post('archive', [\App\Http\Controllers\Demo\ProductActionController::class, 'archive'])
+            ->middleware('permission:product.edit')->name('archive');
+        Route::get('labels', [\App\Http\Controllers\Demo\ProductActionController::class, 'printLabel'])
+            ->middleware('permission:product.print')->name('labels');
+    });
+
     // Log aktivitas
     Route::middleware('permission:system.activity_log')->group(function () {
         Route::get('activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');

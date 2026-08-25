@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Demo;
 
 use App\Http\Controllers\Controller;
 use App\Services\ActivityLogger;
+use App\Services\CodeImageGenerator;
 use App\Services\DataSourceResolver;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -22,9 +23,13 @@ use Illuminate\View\View;
  */
 class ProductActionController extends Controller
 {
+    /** Jenis kode yang boleh diminta lewat query string. */
+    private const KODE = ['barcode', 'qr', 'keduanya', 'tanpa'];
+
     public function __construct(
         private readonly DataSourceResolver $sources,
         private readonly ActivityLogger $log,
+        private readonly CodeImageGenerator $codes,
     ) {}
 
     /** Aksi per baris: ubah status satu produk menjadi published. */
@@ -56,7 +61,30 @@ class ProductActionController extends Controller
             $query->whereIn('id', $ids);
         }
 
-        return view('demo.product-labels', ['items' => $query->limit(500)->get()]);
+        $items = $query->limit(500)->get();
+
+        // Barcode untuk dipindai kasir, QR untuk membuka detail produknya —
+        // dua kebutuhan berbeda, jadi keduanya bisa dipilih.
+        $mode = $request->string('kode')->toString();
+        $mode = in_array($mode, self::KODE, true) ? $mode : 'barcode';
+
+        $rendered = $items->map(function ($item) use ($mode) {
+            $item->barcode_svg = in_array($mode, ['barcode', 'keduanya'], true)
+                ? $this->codes->barcodeSvg((string) $item->code)
+                : null;
+
+            $item->qr_svg = in_array($mode, ['qr', 'keduanya'], true)
+                ? $this->codes->qrSvg($this->codes->canonicalUrl('forms/product/'.$item->id.'/edit'))
+                : null;
+
+            return $item;
+        });
+
+        return view('demo.product-labels', [
+            'items' => $rendered,
+            'mode' => $mode,
+            'modes' => self::KODE,
+        ]);
     }
 
     private function ubahStatus(Request $request, string $status, string $kata): JsonResponse

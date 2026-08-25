@@ -312,6 +312,18 @@ dibuka. Bila baris sudah berubah sejak itu, penyimpanan **ditolak** dengan pesan
 menyuruh memuat ulang — bukan menimpa pekerjaan orang lain diam-diam. Hanya berlaku
 untuk tabel yang punya `updated_at`.
 
+**Barcode dan QR.** `App\Services\CodeImageGenerator` menghasilkan **SVG**, bukan PNG:
+tidak butuh ekstensi gambar, tetap tajam berapa pun ukuran cetaknya, dan bisa
+disematkan langsung tanpa permintaan berkas terpisah. Barcode memakai Code 128
+(dipahami hampir semua pemindai, menerima huruf maupun angka).
+
+Nilai yang tidak bisa dikodekan mengembalikan `null`, bukan melempar exception —
+satu produk tanpa kode tidak boleh mematikan seluruh halaman label.
+
+QR memuat URL yang dibangun dari **`APP_URL`**, bukan host request. Label dicetak untuk
+dipindai belakangan, sering dari perangkat lain; QR berisi `127.0.0.1` akan menunjuk
+perangkat pemindainya sendiri.
+
 **Contoh aksi yang bisa dicoba** ada di `App\Http\Controllers\Demo\ProductActionController`
 dan didaftarkan `DemoProductSeeder`: setujui (per baris, dengan kondisi
 `status = draft`), arsipkan (massal), dan cetak label (toolbar). Engine sengaja tidak
@@ -617,7 +629,7 @@ pesan yang muncul memakai istilah yang dikenal pengguna:
 
 ## 11k. Test Otomatis
 
-`php artisan test` — **161 test, ~4 detik.** 142 berjalan di SQLite; 19 sisanya butuh MySQL
+`php artisan test` — **174 test, ~4 detik.** 155 berjalan di SQLite; 19 sisanya butuh MySQL
 dan **dilewati otomatis** bila database ujinya belum disiapkan.
 
 | Berkas | Cakupan |
@@ -633,6 +645,7 @@ dan **dilewati otomatis** bila database ujinya belum disiapkan.
 | `tests/Feature/SeederIdempotencyTest.php` | seeder aman dijalankan berulang, password & setelan tidak tertimpa |
 | `tests/Feature/ReportCountMysqlTest.php` | **butuh MySQL** — penghitung baris report beragregat ber-join |
 | `tests/Feature/FormActionRendererTest.php` | URL aksi, penyaringan izin, kondisi tampil |
+| `tests/Unit/CodeImageGeneratorTest.php` | barcode & QR: SVG sah, deterministik, URL kanonik |
 
 **Suite berjalan di SQLite** (bawaan `phpunit.xml`), jadi tidak perlu menyiapkan
 database apa pun. `tests/MetadataTestCase.php` membuat tabel bisnis kecil sendiri —

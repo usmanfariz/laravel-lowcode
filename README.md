@@ -101,7 +101,7 @@ Penjadwal membuang berkas ekspor yang lewat masa simpan. Tambahkan satu entri cr
 php artisan test
 ```
 
-161 test. Sebagian besar berjalan di SQLite in-memory tanpa persiapan apa pun.
+174 test. Sebagian besar berjalan di SQLite in-memory tanpa persiapan apa pun.
 
 19 test menyentuh perilaku yang hanya muncul di MySQL (`information_schema`, kolom
 `ENUM`, penolakan nama kolom ganda pada derived table) dan **dilewati otomatis** sampai
@@ -124,7 +124,7 @@ sudo mysql -e "CREATE DATABASE laravel_lowcode_test
 ## Teknologi
 
 Laravel 13 · MySQL · AdminLTE 3 · Bootstrap 4 · jQuery · DataTables · Select2 ·
-Laravel Excel · DomPDF
+Laravel Excel · DomPDF · picqer/php-barcode-generator · bacon/bacon-qr-code
 
 Aset frontend dimuat lewat CDN, jadi tidak perlu Node.js untuk menjalankan aplikasi.
 

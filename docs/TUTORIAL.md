@@ -183,6 +183,18 @@ Form demo `product` sudah punya tiga contoh yang bisa langsung dicoba — Setuju
 (toolbar). Endpoint-nya ada di `App\Http\Controllers\Demo\ProductActionController`,
 contoh bagaimana aksi semacam itu dipasang di aplikasi Anda sendiri.
 
+**Halaman Cetak Label** memperlihatkan barcode dan QR. Pilihannya lewat query string
+`?kode=barcode|qr|keduanya|tanpa`:
+
+| | Isi | Untuk |
+|---|---|---|
+| Barcode | kode produk (Code 128) | dipindai kasir atau alat stok opname |
+| QR | tautan ke halaman ubah produk | dibuka dari ponsel |
+
+QR memakai `APP_URL`, bukan alamat yang sedang Anda buka — supaya label yang dicetak
+dari `localhost` tetap bisa dipindai dari perangkat lain. Pastikan `APP_URL` di `.env`
+berisi alamat yang benar-benar dapat dijangkau.
+
 ---
 
 ## 4. Atur hak akses

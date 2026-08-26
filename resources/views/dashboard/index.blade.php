@@ -100,7 +100,7 @@
                                     <tr>
                                         @foreach ($isi['columns'] as $i => $column)
                                             <td class="text-{{ $column->align ?: 'left' }}">
-                                                {{ $row->{'c'.$i} ?? '—' }}
+                                                {{ $row[$i] ?? '—' }}
                                             </td>
                                         @endforeach
                                     </tr>

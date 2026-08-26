@@ -7,6 +7,7 @@ use App\Models\Report;
 use App\Models\User;
 use App\Services\Report\ReportChartBuilder;
 use App\Services\Report\ReportQueryBuilder;
+use App\Support\ColumnFormatter;
 use Illuminate\Support\Collection;
 
 /**
@@ -122,10 +123,23 @@ class DashboardService
 
         $limit = max(1, min((int) ($widget->row_limit ?: 5), 50));
 
+        // Nilai diformat di sini, bukan di view: aturannya harus sama persis
+        // dengan halaman report-nya. Mode plain dipakai karena Blade sudah
+        // meng-escape sendiri lewat `{{ }}`.
+        $rows = $query->limit($limit)->get()->map(function ($row) use ($columns) {
+            $cells = [];
+
+            foreach ($columns as $i => $column) {
+                $cells[$i] = ColumnFormatter::plain($row->{'c'.$i} ?? null, $column);
+            }
+
+            return $cells;
+        });
+
         return [
             'report' => $report,
             'columns' => $columns,
-            'rows' => $query->limit($limit)->get(),
+            'rows' => $rows,
         ];
     }
 

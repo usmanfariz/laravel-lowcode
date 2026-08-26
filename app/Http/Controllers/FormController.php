@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\ColumnFormatter;
 use App\Exceptions\StaleRecordException;
 use App\Models\Form;
 use App\Models\FormField;
@@ -13,7 +14,6 @@ use App\Services\Form\FormRenderer;
 use App\Services\Form\FormRepository;
 use App\Services\Form\FormService;
 use App\Services\Form\FormValidator;
-use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -218,20 +218,7 @@ class FormController extends Controller
     /** Terapkan format tampilan kolom list. */
     private function format(mixed $value, $column): mixed
     {
-        if ($value === null) {
-            return null;
-        }
-
-        return match ($column->format) {
-            'number' => number_format((float) $value, 0, ',', '.'),
-            'decimal' => number_format((float) $value, 2, ',', '.'),
-            'currency' => 'Rp '.number_format((float) $value, 2, ',', '.'),
-            'percentage' => number_format((float) $value, 2, ',', '.').'%',
-            'date' => optional(Carbon::parse($value))->format(setting('date_format', 'd/m/Y')),
-            'datetime' => optional(Carbon::parse($value))->format(setting('date_format', 'd/m/Y').' H:i'),
-            'boolean' => (bool) $value,
-            default => e((string) $value),
-        };
+        return ColumnFormatter::html($value, $column);
     }
 
     public function create(Request $request, string $code): View

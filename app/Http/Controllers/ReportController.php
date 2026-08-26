@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\ColumnFormatter;
 use App\Models\Report;
 use App\Services\ExportService;
 use App\Services\Report\ReportChartBuilder;
 use App\Services\Report\ReportFilterRenderer;
 use App\Services\Report\ReportQueryBuilder;
 use App\Services\Report\ReportService;
-use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -298,22 +298,7 @@ class ReportController extends Controller
 
     private function format(mixed $value, $column): mixed
     {
-        if ($value === null) {
-            return null;
-        }
-
-        $decimals = $column->decimal_places ?? 2;
-
-        return match ($column->format) {
-            'number' => number_format((float) $value, 0, ',', '.'),
-            'decimal' => number_format((float) $value, $decimals, ',', '.'),
-            'currency' => 'Rp '.number_format((float) $value, $decimals, ',', '.'),
-            'percentage' => number_format((float) $value, $decimals, ',', '.').'%',
-            'date' => Carbon::parse($value)->format(setting('date_format', 'd/m/Y')),
-            'datetime' => Carbon::parse($value)->format(setting('date_format', 'd/m/Y').' H:i'),
-            'boolean' => (bool) $value,
-            default => e((string) $value),
-        };
+        return ColumnFormatter::html($value, $column);
     }
 
     /** @return array<int, array<int, mixed>> id filter → larik nilai */

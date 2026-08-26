@@ -1117,7 +1117,91 @@ body.login-page::before {
 .login-page .icheck-primary > label { font-size: .85rem; color: var(--lc-text-muted); }
 
 /* ==========================================================================
-   16. Lain-lain
+   16. Tombol aksi di baris tabel
+   ========================================================================== */
+
+/*
+ * Kolom aksi sebelumnya memuat empat sampai lima tombol berwarna-warni yang
+ * membungkus ke baris kedua: lebarnya dipatok inline (mis. width:200px)
+ * sementara isinya lebih lebar. Warnanya pun tidak menandakan apa-apa —
+ * "Field", "Kolom", dan "Pengaturan" sama-sama navigasi.
+ *
+ * Diperbaiki di sini, bukan di view: sel dibuat tidak membungkus — pada tata
+ * letak tabel otomatis min-content mengalahkan lebar inline — dan tombolnya
+ * diseragamkan netral supaya ikon yang membedakan, bukan warna.
+ */
+td:has(.btn-xs) {
+    white-space: nowrap;
+    width: 1%;
+}
+
+td:has(.btn-xs) > form {
+    display: inline-flex;
+    margin: 0;
+    vertical-align: middle;
+}
+
+/* Ukuran dan perataan berlaku untuk semua tombol di kolom aksi. */
+td:has(.btn-xs) .btn-xs {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    vertical-align: middle;
+    margin: .1rem .12rem;
+    padding: .26rem .5rem;
+    font-size: .74rem;
+    font-weight: 500;
+}
+
+/*
+ * Warna netral hanya untuk tombol bawaan. Aksi khusus pada daftar form
+ * dirender dengan class pilihan admin (`js-action`) — di sana warnanya memang
+ * bermakna, jadi tidak diratakan.
+ */
+td:has(.btn-xs) .btn-xs:not(.js-action) {
+    background-color: var(--lc-surface);
+    border: 1px solid var(--lc-border-2);
+    color: var(--lc-text-muted);
+}
+
+td:has(.btn-xs) .btn-xs:not(.js-action):hover {
+    background-color: var(--lc-surface-3);
+    border-color: var(--lc-text-subtle);
+    color: var(--lc-text);
+}
+
+/* Jarak ikon diatur oleh gap, jadi utility mr-* bawaan dinetralkan. */
+td:has(.btn-xs) .btn-xs > i {
+    margin: 0 !important;
+    font-size: .78rem;
+}
+
+/* Tindakan merusak: merah teredam, penuh hanya saat disentuh. */
+td:has(.btn-xs) .btn-xs.btn-danger:not(.js-action) {
+    color: var(--lc-danger);
+    border-color: var(--lc-danger-border);
+}
+
+td:has(.btn-xs) .btn-xs.btn-danger:not(.js-action):hover {
+    background-color: var(--lc-danger);
+    border-color: var(--lc-danger);
+    color: #fff;
+}
+
+/* Begitu juga tindakan pemulihan versi. */
+td:has(.btn-xs) .btn-xs.btn-warning:not(.js-action) {
+    color: var(--lc-warning);
+    border-color: var(--lc-warning-border);
+}
+
+td:has(.btn-xs) .btn-xs.btn-warning:not(.js-action):hover {
+    background-color: var(--lc-warning);
+    border-color: var(--lc-warning);
+    color: #fff;
+}
+
+/* ==========================================================================
+   17. Lain-lain
    ========================================================================== */
 
 /* Utility bg-* Bootstrap dibuat mengikuti palet, supaya tidak ada warna liar. */

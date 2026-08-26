@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Support\ColumnFormatter;
 use App\Exports\TabularExport;
 use App\Models\ExportJob;
 use App\Models\Form;
@@ -10,7 +11,6 @@ use App\Services\ExportService;
 use App\Services\Form\FormQueryBuilder;
 use App\Services\Report\ReportQueryBuilder;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Carbon\Carbon;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Storage;
@@ -201,21 +201,6 @@ class GenerateExport implements ShouldQueue
     /** Format tampilan yang sama dengan layar, tanpa penanda HTML. */
     private function plain(mixed $value, $column): mixed
     {
-        if ($value === null) {
-            return null;
-        }
-
-        $decimals = $column->decimal_places ?? 2;
-
-        return match ($column->format) {
-            'number' => number_format((float) $value, 0, ',', '.'),
-            'decimal' => number_format((float) $value, $decimals, ',', '.'),
-            'currency' => 'Rp '.number_format((float) $value, $decimals, ',', '.'),
-            'percentage' => number_format((float) $value, $decimals, ',', '.').'%',
-            'date' => Carbon::parse($value)->format(setting('date_format', 'd/m/Y')),
-            'datetime' => Carbon::parse($value)->format(setting('date_format', 'd/m/Y').' H:i'),
-            'boolean' => $value ? 'Ya' : 'Tidak',
-            default => (string) $value,
-        };
+        return ColumnFormatter::plain($value, $column);
     }
 }

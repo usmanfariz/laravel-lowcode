@@ -22,8 +22,11 @@ class ReportChartBuilder
 
     /** Warna deret; berulang bila deretnya lebih banyak. */
     private const COLORS = [
-        '#0d6efd', '#198754', '#dc3545', '#fd7e14', '#6f42c1',
-        '#20c997', '#d63384', '#0dcaf0', '#ffc107', '#6610f2',
+        // Selaras dengan token --lc-chart-* di public/css/theme.css (mode terang).
+        // Sisi klien menimpanya dari token agar mode gelap ikut; nilai di sini
+        // menjadi cadangan dan penentu urutan slot.
+        '#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4',
+        '#008300', '#4a3aa7', '#e34948',
     ];
 
     public function __construct(private readonly ReportQueryBuilder $builder) {}

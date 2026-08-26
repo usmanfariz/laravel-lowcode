@@ -2,11 +2,23 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
+    <script>
+        // Terapkan mode gelap sebelum render, supaya halaman tidak berkedip putih.
+        (function () {
+            try {
+                if (localStorage.getItem('lc-theme') === 'dark') {
+                    document.documentElement.setAttribute('data-lc-theme', 'dark');
+                }
+            } catch (e) { /* localStorage diblokir: biarkan mode terang. */ }
+        })();
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Masuk &mdash; {{ setting('app_name', config('app.name')) }}</title>
     <link rel="icon" href="{{ setting_file('app_favicon') ?: asset('favicon.ico') }}">
+    <link rel="stylesheet" href="https://fonts.bunny.net/css?family=inter:400,500,600,700">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2.0/dist/css/adminlte.min.css">
+    <link rel="stylesheet" href="{{ asset('css/theme.css') }}?v={{ @filemtime(public_path('css/theme.css')) }}">
 </head>
 <body class="hold-transition login-page">
 <div class="login-box">

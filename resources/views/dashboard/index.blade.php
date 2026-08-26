@@ -147,8 +147,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>
 $(function () {
-    const WARNA = ['#0d6efd','#198754','#dc3545','#fd7e14','#6f42c1',
-                   '#20c997','#d63384','#0dcaf0','#ffc107','#6610f2'];
+    LcChart.terapkanBawaan();
 
     $('canvas[data-chart]').each(function () {
         const payload = $(this).data('chart');
@@ -156,30 +155,46 @@ $(function () {
         if (!payload || !payload.datasets) return;
 
         const lingkaran = jenis === 'pie' || jenis === 'doughnut';
+        const sumbuNilai = jenis === 'horizontal_bar' ? 'x' : 'y';
 
-        new Chart(this, {
+        // Warna diambil dari token tema, bukan dari payload, supaya mode gelap
+        // ikut berubah dan paletnya sama di seluruh aplikasi.
+        function warnai(ds, i) {
+            if (lingkaran) {
+                // Lingkaran diwarnai per irisan, bukan per deret.
+                ds.backgroundColor = LcChart.palet(payload.labels.length);
+            } else {
+                ds.backgroundColor = jenis === 'area' ? LcChart.lembut(i) : LcChart.warna(i);
+                ds.borderColor = LcChart.warna(i);
+            }
+        }
+
+        const chart = new Chart(this, {
             type: lingkaran ? jenis : (jenis === 'area' ? 'line' : (jenis === 'horizontal_bar' ? 'bar' : jenis)),
             data: {
                 labels: payload.labels,
-                datasets: payload.datasets.map((d, i) => lingkaran
-                    ? { label: d.label, data: d.data,
-                        backgroundColor: payload.labels.map((_, j) => WARNA[j % WARNA.length]) }
-                    : { label: d.label, data: d.data,
-                        backgroundColor: jenis === 'area' ? d.color + '33' : d.color,
-                        borderColor: d.color, borderWidth: 2,
-                        fill: jenis === 'area', tension: (jenis === 'line' || jenis === 'area') ? 0.3 : 0 }),
+                datasets: payload.datasets.map(function (d, i) {
+                    const ds = {
+                        label: d.label,
+                        data: d.data,
+                        borderWidth: lingkaran ? undefined : 2,
+                        fill: jenis === 'area',
+                        tension: (jenis === 'line' || jenis === 'area') ? 0.3 : 0,
+                    };
+                    warnai(ds, i);
+                    return ds;
+                }),
             },
             options: {
                 responsive: true, maintainAspectRatio: false,
                 indexAxis: jenis === 'horizontal_bar' ? 'y' : 'x',
                 plugins: { legend: { display: payload.datasets.length > 1 || lingkaran } },
-                scales: lingkaran ? {} : {
-                    [jenis === 'horizontal_bar' ? 'x' : 'y']: {
-                        beginAtZero: true,
-                        ticks: { callback: v => v.toLocaleString('id-ID') },
-                    },
-                },
+                scales: lingkaran ? {} : LcChart.skala(sumbuNilai),
             },
+        });
+
+        LcChart.daftarkan(chart, function (c) {
+            c.data.datasets.forEach(warnai);
         });
     });
 });

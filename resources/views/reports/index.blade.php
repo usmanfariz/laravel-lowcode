@@ -198,29 +198,43 @@ $(function () {
         return value.toLocaleString('id-ID');
     }
 
+    LcChart.terapkanBawaan();
+
+    // Fungsi pewarna untuk payload yang sedang tampil; dipakai lagi saat mode
+    // terang/gelap diganti.
+    let warnaiAktif = null;
+
     function chartConfig(payload) {
         const isPie = CHART_TYPE === 'pie' || CHART_TYPE === 'doughnut';
         const isArea = CHART_TYPE === 'area';
 
-        const datasets = payload.datasets.map(d => {
-            const base = { label: d.label, data: d.data };
-
+        // Warna dari token tema, bukan dari payload, supaya mode gelap ikut dan
+        // paletnya seragam dengan dashboard.
+        function warnai(ds, i) {
             if (isPie) {
-                // Lingkaran mewarnai per irisan, bukan per deret.
-                return Object.assign(base, {
-                    backgroundColor: payload.labels.map((_, i) =>
-                        payload.datasets.length > 1 ? d.color : PIE_COLORS[i % PIE_COLORS.length]),
-                });
+                // Lingkaran mewarnai per irisan, kecuali saat ada beberapa deret.
+                ds.backgroundColor = payload.datasets.length > 1
+                    ? LcChart.warna(i)
+                    : LcChart.palet(payload.labels.length);
+            } else {
+                ds.backgroundColor = isArea ? LcChart.lembut(i) : LcChart.warna(i);
+                ds.borderColor = LcChart.warna(i);
             }
+        }
 
-            return Object.assign(base, {
-                backgroundColor: isArea ? d.color + '33' : d.color,
-                borderColor: d.color,
-                borderWidth: 2,
+        const datasets = payload.datasets.map((d, i) => {
+            const ds = {
+                label: d.label,
+                data: d.data,
+                borderWidth: isPie ? undefined : 2,
                 fill: isArea,
                 tension: (CHART_TYPE === 'line' || isArea) ? 0.3 : 0,
-            });
+            };
+            warnai(ds, i);
+            return ds;
         });
+
+        warnaiAktif = warnai;
 
         return {
             type: isPie ? CHART_TYPE : (CHART_TYPE === 'area' ? 'line' : (CHART_TYPE === 'horizontal_bar' ? 'bar' : CHART_TYPE)),
@@ -240,18 +254,10 @@ $(function () {
                         },
                     },
                 },
-                scales: isPie ? {} : {
-                    [CHART_TYPE === 'horizontal_bar' ? 'x' : 'y']: {
-                        beginAtZero: true,
-                        ticks: { callback: v => v.toLocaleString('id-ID') },
-                    },
-                },
+                scales: isPie ? {} : LcChart.skala(CHART_TYPE === 'horizontal_bar' ? 'x' : 'y'),
             },
         };
     }
-
-    const PIE_COLORS = ['#0d6efd','#198754','#dc3545','#fd7e14','#6f42c1',
-                        '#20c997','#d63384','#0dcaf0','#ffc107','#6610f2'];
 
     function muatGrafik() {
         const params = $('#form-filter').serialize();
@@ -267,6 +273,9 @@ $(function () {
 
                 if (chart) chart.destroy();
                 chart = new Chart(document.getElementById('chart-report'), chartConfig(payload));
+                LcChart.daftarkan(chart, function (c) {
+                    if (warnaiAktif) c.data.datasets.forEach(warnaiAktif);
+                });
             })
             .fail(function (xhr) {
                 $('#chart-error').removeClass('d-none')

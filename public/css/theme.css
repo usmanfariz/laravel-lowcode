@@ -1,0 +1,1158 @@
+/*
+ * Theme layer di atas AdminLTE 3 / Bootstrap 4.
+ *
+ * Dimuat SETELAH adminlte.min.css, jadi override bekerja dengan specificity
+ * yang sama. Tidak ada view yang perlu diubah: berkas ini menargetkan class
+ * yang sudah dipakai (.card, .btn, .form-control, .table, .small-box, dst).
+ *
+ * Ganti tampilan cukup dari blok token di bawah.
+ */
+
+/* ==========================================================================
+   1. Token
+   ========================================================================== */
+
+:root {
+    /* Warna brand */
+    --lc-brand:          #3b5bdb;
+    --lc-brand-hover:    #364fc7;
+    --lc-brand-active:   #2f44b2;
+    --lc-brand-soft:     #edf0fd;
+    --lc-brand-border:   #c5cffa;
+    --lc-brand-contrast: #ffffff;
+
+    /* Permukaan */
+    --lc-bg:          #f6f7f9;
+    --lc-surface:     #ffffff;
+    --lc-surface-2:   #f9fafb;
+    --lc-surface-3:   #f1f3f5;
+    --lc-border:      #e5e7eb;
+    --lc-border-2:    #d1d5db;
+
+    /* Teks */
+    --lc-text:        #1f2733;
+    --lc-text-muted:  #6b7280;
+    --lc-text-subtle: #9ca3af;
+    --lc-text-invert: #ffffff;
+
+    /* Sidebar gelap */
+    --lc-side-bg:          #171a20;
+    --lc-side-bg-2:        #1e222a;
+    --lc-side-border:      #282d36;
+    --lc-side-text:        #b6bcc7;
+    --lc-side-text-strong: #f3f4f6;
+    --lc-side-text-dim:    #757d8a;
+    --lc-side-hover:       rgba(255, 255, 255, .06);
+    --lc-side-active:      var(--lc-brand);
+
+    /* Semantik */
+    --lc-success: #12855b;  --lc-success-soft: #e7f6ef;  --lc-success-border: #b9e3d0;
+    --lc-warning: #b45309;  --lc-warning-soft: #fdf3e3;  --lc-warning-border: #f2d9ae;
+    --lc-danger:  #c62828;  --lc-danger-soft:  #fdeeee;  --lc-danger-border:  #f5c6c6;
+    --lc-info:    #0e7490;  --lc-info-soft:    #e6f5f9;  --lc-info-border:    #b3dfeb;
+
+    /* Bentuk */
+    --lc-radius-sm: 6px;
+    --lc-radius:    10px;
+    --lc-radius-lg: 14px;
+
+    /* Bayangan */
+    --lc-shadow-xs: 0 1px 2px rgba(16, 24, 40, .05);
+    --lc-shadow-sm: 0 1px 3px rgba(16, 24, 40, .07), 0 1px 2px rgba(16, 24, 40, .04);
+    --lc-shadow:    0 4px 12px rgba(16, 24, 40, .07), 0 1px 3px rgba(16, 24, 40, .05);
+    --lc-shadow-lg: 0 12px 32px rgba(16, 24, 40, .12), 0 4px 8px rgba(16, 24, 40, .05);
+    --lc-ring:      0 0 0 3px rgba(59, 91, 219, .18);
+
+
+    /* Palet chart, urutan tetap (jangan diputar). Slot 1-3 aman untuk
+     * pie/donut yang membandingkan semua pasangan sekaligus. */
+    --lc-chart-1: #2a78d6;
+    --lc-chart-2: #eb6834;
+    --lc-chart-3: #1baf7a;
+    --lc-chart-4: #eda100;
+    --lc-chart-5: #e87ba4;
+    --lc-chart-6: #008300;
+    --lc-chart-7: #4a3aa7;
+    --lc-chart-8: #e34948;
+    /* Seri ke-9 dan seterusnya tidak mendapat hue baru: jadi abu netral. */
+    --lc-chart-more: #9ca3af;
+    --lc-chart-grid: #eceef1;
+    --lc-chart-ink:  #6b7280;
+
+    /* Tipografi */
+    --lc-font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --lc-font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+}
+
+/* Mode gelap. Diaktifkan lewat atribut di <html> agar tidak ada kedipan. */
+html[data-lc-theme="dark"] {
+    --lc-bg:        #14171c;
+    --lc-surface:   #1b1f26;
+    --lc-surface-2: #22272f;
+    --lc-surface-3: #2a3038;
+    --lc-border:    #2e343d;
+    --lc-border-2:  #3b424d;
+
+    --lc-text:        #e5e7eb;
+    --lc-text-muted:  #9aa2ae;
+    --lc-text-subtle: #6f7783;
+
+    --lc-brand:        #6b8afd;
+    --lc-brand-hover:  #7f9aff;
+    --lc-brand-active: #5b7bf5;
+    --lc-brand-soft:   rgba(107, 138, 253, .14);
+    --lc-brand-border: rgba(107, 138, 253, .35);
+    --lc-brand-contrast: #10141b;
+
+    --lc-side-bg:     #101317;
+    --lc-side-bg-2:   #161a20;
+    --lc-side-border: #23282f;
+
+    --lc-success: #38d39f;  --lc-success-soft: rgba(56, 211, 159, .13);  --lc-success-border: rgba(56, 211, 159, .3);
+    --lc-warning: #f0b429;  --lc-warning-soft: rgba(240, 180, 41, .13);  --lc-warning-border: rgba(240, 180, 41, .3);
+    --lc-danger:  #f97066;  --lc-danger-soft:  rgba(249, 112, 102, .13); --lc-danger-border:  rgba(249, 112, 102, .3);
+    --lc-info:    #4cc0e0;  --lc-info-soft:    rgba(76, 192, 224, .13);  --lc-info-border:    rgba(76, 192, 224, .3);
+
+
+    --lc-chart-1: #3987e5;
+    --lc-chart-2: #d95926;
+    --lc-chart-3: #199e70;
+    --lc-chart-4: #c98500;
+    --lc-chart-5: #d55181;
+    --lc-chart-6: #008300;
+    --lc-chart-7: #9085e9;
+    --lc-chart-8: #e66767;
+    --lc-chart-more: #6f7783;
+    --lc-chart-grid: #2b313a;
+    --lc-chart-ink:  #9aa2ae;
+
+    --lc-shadow-xs: 0 1px 2px rgba(0, 0, 0, .3);
+    --lc-shadow-sm: 0 1px 3px rgba(0, 0, 0, .4);
+    --lc-shadow:    0 4px 12px rgba(0, 0, 0, .4);
+    --lc-shadow-lg: 0 12px 32px rgba(0, 0, 0, .5);
+    --lc-ring:      0 0 0 3px rgba(107, 138, 253, .25);
+}
+
+/* ==========================================================================
+   2. Dasar
+   ========================================================================== */
+
+body,
+.wrapper {
+    font-family: var(--lc-font);
+    background-color: var(--lc-bg);
+    color: var(--lc-text);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-size: .9rem;
+    line-height: 1.55;
+}
+
+h1, h2, h3, h4, h5, h6,
+.h1, .h2, .h3, .h4, .h5, .h6 {
+    color: var(--lc-text);
+    font-weight: 600;
+    letter-spacing: -.011em;
+}
+
+a { color: var(--lc-brand); text-decoration: none; }
+a:hover { color: var(--lc-brand-hover); text-decoration: none; }
+
+code, kbd, pre, samp, .text-monospace { font-family: var(--lc-font-mono); }
+
+code {
+    background: var(--lc-surface-3);
+    color: var(--lc-text);
+    padding: .12em .38em;
+    border-radius: var(--lc-radius-sm);
+    font-size: .85em;
+}
+
+hr { border-top-color: var(--lc-border); }
+
+.text-muted { color: var(--lc-text-muted) !important; }
+.small, small { font-size: .82rem; }
+
+/* Cincin fokus konsisten, hanya untuk navigasi keyboard. */
+:focus-visible {
+    outline: 2px solid var(--lc-brand);
+    outline-offset: 2px;
+}
+
+/* ==========================================================================
+   3. Kerangka halaman
+   ========================================================================== */
+
+.content-wrapper {
+    background-color: var(--lc-bg);
+}
+
+.content-header {
+    padding: 1.35rem .75rem .35rem;
+}
+
+.content-header h1 {
+    font-size: 1.35rem;
+    font-weight: 600;
+}
+
+.content { padding-top: .75rem; }
+
+.breadcrumb {
+    background: transparent;
+    padding: .35rem 0;
+    margin-bottom: 0;
+    font-size: .82rem;
+}
+
+.breadcrumb-item + .breadcrumb-item::before { color: var(--lc-text-subtle); }
+.breadcrumb-item.active { color: var(--lc-text-muted); }
+
+.main-footer {
+    background-color: var(--lc-surface);
+    border-top: 1px solid var(--lc-border);
+    color: var(--lc-text-muted);
+    padding: .9rem 1rem;
+    font-size: .82rem;
+}
+
+.main-footer strong { color: var(--lc-text); font-weight: 600; }
+
+/* ==========================================================================
+   4. Sidebar
+   ========================================================================== */
+
+.main-sidebar,
+.main-sidebar .sidebar {
+    background-color: var(--lc-side-bg);
+}
+
+/* Bayangan tebal AdminLTE diganti garis tipis. */
+.main-sidebar.elevation-4 {
+    box-shadow: none !important;
+    border-right: 1px solid var(--lc-side-border);
+}
+
+.main-sidebar .brand-link {
+    background-color: var(--lc-side-bg);
+    border-bottom: 1px solid var(--lc-side-border);
+    color: var(--lc-side-text-strong);
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: -.01em;
+    padding: .9rem 1rem;
+    height: auto;
+}
+
+.main-sidebar .brand-link:hover { color: var(--lc-side-text-strong); }
+.main-sidebar .brand-text { font-weight: 600 !important; }
+.main-sidebar .brand-image {
+    box-shadow: none !important;
+    margin-top: -.15rem;
+}
+.main-sidebar .brand-link > .fa-cubes { color: var(--lc-brand); }
+
+.main-sidebar .sidebar { padding: .5rem .6rem 1.5rem; }
+
+.nav-sidebar .nav-header {
+    color: var(--lc-side-text-dim);
+    font-size: .68rem;
+    font-weight: 600;
+    letter-spacing: .09em;
+    padding: 1.15rem .65rem .4rem;
+}
+
+.nav-sidebar .nav-item > .nav-link {
+    color: var(--lc-side-text);
+    border-radius: var(--lc-radius-sm);
+    padding: .52rem .65rem;
+    margin-bottom: 1px;
+    font-size: .875rem;
+    font-weight: 500;
+    transition: background-color .12s ease, color .12s ease;
+}
+
+.nav-sidebar .nav-item > .nav-link:hover {
+    background-color: var(--lc-side-hover);
+    color: var(--lc-side-text-strong);
+}
+
+.nav-sidebar .nav-icon {
+    font-size: .95rem;
+    width: 1.5rem;
+    text-align: center;
+    color: var(--lc-side-text-dim);
+    transition: color .12s ease;
+}
+
+.nav-sidebar .nav-item > .nav-link:hover .nav-icon { color: var(--lc-side-text); }
+
+/* Item aktif: pill lembut, bukan blok biru penuh. */
+.nav-sidebar > .nav-item > .nav-link.active,
+.nav-sidebar > .nav-item > .nav-link.active:hover,
+.sidebar-dark-primary .nav-sidebar > .nav-item > .nav-link.active,
+.sidebar-light-primary .nav-sidebar > .nav-item > .nav-link.active,
+[class*="sidebar-dark"] .nav-sidebar > .nav-item > .nav-link.active,
+.nav-sidebar .nav-treeview > .nav-item > .nav-link.active {
+    background-color: var(--lc-side-active) !important;
+    color: #fff !important;
+    box-shadow: none !important;
+    font-weight: 600;
+}
+
+.nav-sidebar .nav-link.active .nav-icon { color: #fff; }
+
+.nav-sidebar .nav-item.menu-open > .nav-link {
+    background-color: var(--lc-side-bg-2);
+    color: var(--lc-side-text-strong);
+}
+
+.nav-sidebar .nav-treeview {
+    padding-left: .45rem;
+    margin-left: .75rem;
+    border-left: 1px solid var(--lc-side-border);
+}
+
+.nav-sidebar .nav-treeview > .nav-item > .nav-link {
+    color: var(--lc-side-text);
+    font-size: .84rem;
+    font-weight: 400;
+    padding: .42rem .6rem;
+    border-radius: var(--lc-radius-sm);
+}
+
+.nav-sidebar .nav-treeview > .nav-item > .nav-link:hover {
+    background-color: var(--lc-side-hover);
+    color: var(--lc-side-text-strong);
+}
+
+.nav-sidebar .nav-link > p > .right { font-size: .78rem; opacity: .6; }
+
+/* Sidebar terang, kalau setelan sidebar_skin memakai varian light. */
+[class*="sidebar-light"].main-sidebar {
+    --lc-side-bg:          var(--lc-surface);
+    --lc-side-bg-2:        var(--lc-surface-3);
+    --lc-side-border:      var(--lc-border);
+    --lc-side-text:        var(--lc-text-muted);
+    --lc-side-text-strong: var(--lc-text);
+    --lc-side-text-dim:    var(--lc-text-subtle);
+    --lc-side-hover:       var(--lc-surface-3);
+}
+
+/* Scrollbar sidebar */
+.main-sidebar .sidebar::-webkit-scrollbar { width: 8px; }
+.main-sidebar .sidebar::-webkit-scrollbar-track { background: transparent; }
+.main-sidebar .sidebar::-webkit-scrollbar-thumb {
+    background: var(--lc-side-border);
+    border-radius: 4px;
+}
+
+/* ==========================================================================
+   5. Navbar
+   ========================================================================== */
+
+.main-header.navbar {
+    background-color: var(--lc-surface);
+    border-bottom: 1px solid var(--lc-border);
+    box-shadow: none;
+    min-height: 3.4rem;
+    padding: 0 .5rem;
+}
+
+.main-header.navbar .nav-link {
+    color: var(--lc-text-muted);
+    border-radius: var(--lc-radius-sm);
+    padding: .45rem .65rem;
+    margin: 0 .1rem;
+    font-size: .875rem;
+    transition: background-color .12s ease, color .12s ease;
+}
+
+.main-header.navbar .nav-link:hover {
+    background-color: var(--lc-surface-3);
+    color: var(--lc-text);
+}
+
+.main-header.navbar .navbar-badge {
+    font-size: .62rem;
+    padding: .18rem .32rem;
+    top: 4px;
+    right: 2px;
+    border-radius: 999px;
+    box-shadow: 0 0 0 2px var(--lc-surface);
+}
+
+[class*="navbar-dark"].main-header.navbar {
+    background-color: var(--lc-side-bg);
+    border-bottom-color: var(--lc-side-border);
+}
+[class*="navbar-dark"].main-header.navbar .nav-link { color: var(--lc-side-text); }
+[class*="navbar-dark"].main-header.navbar .nav-link:hover {
+    background-color: var(--lc-side-hover);
+    color: var(--lc-side-text-strong);
+}
+
+/* ==========================================================================
+   6. Card
+   ========================================================================== */
+
+.card {
+    background-color: var(--lc-surface);
+    border: 1px solid var(--lc-border);
+    border-radius: var(--lc-radius-lg);
+    box-shadow: var(--lc-shadow-xs);
+    margin-bottom: 1.25rem;
+}
+
+.card-header {
+    background-color: transparent;
+    border-bottom: 1px solid var(--lc-border);
+    padding: .95rem 1.15rem;
+    border-radius: var(--lc-radius-lg) var(--lc-radius-lg) 0 0;
+    min-height: auto;
+}
+
+.card-header .card-title {
+    font-size: .95rem;
+    font-weight: 600;
+    color: var(--lc-text);
+    letter-spacing: -.005em;
+    float: none;
+    display: inline-block;
+    margin: 0;
+}
+
+.card-body { padding: 1.15rem; }
+.card-body > *:last-child { margin-bottom: 0; }
+
+.card-footer {
+    background-color: var(--lc-surface-2);
+    border-top: 1px solid var(--lc-border);
+    padding: .85rem 1.15rem;
+    border-radius: 0 0 var(--lc-radius-lg) var(--lc-radius-lg);
+}
+
+/*
+ * card-outline AdminLTE memberi garis atas 3px yang mencolok. Diganti garis
+ * 2px tipis, dan warnanya mengikuti varian yang dipakai view.
+ */
+/* Warna dasar dulu, supaya varian yang tidak dikenal (mis. card-dark) tidak
+ * jatuh ke hitam bawaan AdminLTE. */
+.card.card-outline {
+    border-top-width: 2px;
+    border-top-color: var(--lc-border-2);
+}
+
+.card.card-outline.card-primary   { border-top-color: var(--lc-brand); }
+.card.card-outline.card-secondary { border-top-color: var(--lc-border-2); }
+.card.card-outline.card-success   { border-top-color: var(--lc-success); }
+.card.card-outline.card-warning   { border-top-color: var(--lc-warning); }
+.card.card-outline.card-danger    { border-top-color: var(--lc-danger); }
+.card.card-outline.card-info      { border-top-color: var(--lc-info); }
+.card.card-outline.card-dark      { border-top-color: var(--lc-text-subtle); }
+.card.card-outline.card-light     { border-top-color: var(--lc-border); }
+
+/* Header card berwarna solid dibuat kalem. */
+.card:not(.card-outline) > .card-header {
+    background-color: var(--lc-surface-2);
+    color: var(--lc-text);
+}
+
+.card-tools .btn-tool {
+    color: var(--lc-text-subtle);
+    border-radius: var(--lc-radius-sm);
+    padding: .25rem .45rem;
+}
+
+.card-tools .btn-tool:hover {
+    color: var(--lc-text);
+    background-color: var(--lc-surface-3);
+}
+
+/* ==========================================================================
+   7. Stat card (small-box)
+   ========================================================================== */
+
+/*
+ * Aslinya kotak warna solid penuh. Dibuat jadi kartu putih dengan angka besar
+ * dan aksen warna tipis — jauh lebih enak dibaca berjejer banyak.
+ */
+.small-box {
+    background-color: var(--lc-surface) !important;
+    color: var(--lc-text) !important;
+    border: 1px solid var(--lc-border);
+    border-radius: var(--lc-radius-lg);
+    box-shadow: var(--lc-shadow-xs);
+    margin-bottom: 1.25rem;
+    overflow: hidden;
+    position: relative;
+}
+
+.small-box::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 3px;
+    background: var(--lc-sb-accent, var(--lc-brand));
+}
+
+.small-box > .inner { padding: 1.15rem 1.25rem; }
+
+.small-box h3 {
+    color: var(--lc-text) !important;
+    font-size: 1.9rem;
+    font-weight: 600;
+    letter-spacing: -.02em;
+    margin: 0 0 .15rem;
+}
+
+.small-box p {
+    color: var(--lc-text-muted) !important;
+    font-size: .82rem;
+    font-weight: 500;
+    margin: 0;
+}
+
+.small-box .icon {
+    color: var(--lc-sb-accent, var(--lc-brand)) !important;
+    opacity: .16;
+    top: 50%;
+    right: 1rem;
+    transform: translateY(-50%);
+    transition: opacity .15s ease;
+}
+
+.small-box .icon > i { font-size: 3.2rem; }
+.small-box:hover .icon { opacity: .24; top: 50%; }
+
+.small-box .small-box-footer {
+    background-color: var(--lc-surface-2) !important;
+    color: var(--lc-text-muted) !important;
+    border-top: 1px solid var(--lc-border);
+    font-size: .78rem;
+    font-weight: 500;
+    padding: .55rem;
+}
+
+.small-box .small-box-footer:hover {
+    background-color: var(--lc-surface-3) !important;
+    color: var(--lc-brand) !important;
+}
+
+/* Warna aksen mengikuti class bg-* yang sudah dipakai view. */
+.small-box.bg-primary   { --lc-sb-accent: var(--lc-brand); }
+.small-box.bg-secondary { --lc-sb-accent: var(--lc-text-subtle); }
+.small-box.bg-success   { --lc-sb-accent: var(--lc-success); }
+.small-box.bg-warning   { --lc-sb-accent: var(--lc-warning); }
+.small-box.bg-danger    { --lc-sb-accent: var(--lc-danger); }
+.small-box.bg-info      { --lc-sb-accent: var(--lc-info); }
+.small-box.bg-dark      { --lc-sb-accent: var(--lc-text); }
+.small-box.bg-light     { --lc-sb-accent: var(--lc-border-2); }
+
+/* info-box, kalau nanti dipakai */
+.info-box {
+    background-color: var(--lc-surface);
+    border: 1px solid var(--lc-border);
+    border-radius: var(--lc-radius-lg);
+    box-shadow: var(--lc-shadow-xs);
+}
+.info-box .info-box-text { color: var(--lc-text-muted); font-size: .82rem; }
+.info-box .info-box-number { color: var(--lc-text); font-weight: 600; }
+
+/* ==========================================================================
+   8. Tombol
+   ========================================================================== */
+
+.btn {
+    border-radius: var(--lc-radius-sm);
+    font-size: .85rem;
+    font-weight: 500;
+    padding: .44rem .85rem;
+    line-height: 1.45;
+    box-shadow: none !important;
+    transition: background-color .12s ease, border-color .12s ease, color .12s ease;
+}
+
+.btn:focus-visible { box-shadow: var(--lc-ring) !important; }
+
+.btn-sm { font-size: .78rem; padding: .28rem .6rem; border-radius: var(--lc-radius-sm); }
+.btn-lg { font-size: .95rem; padding: .6rem 1.15rem; border-radius: var(--lc-radius); }
+.btn-xs { font-size: .72rem; padding: .18rem .45rem; }
+
+.btn i { font-size: .9em; }
+
+.btn-primary {
+    background-color: var(--lc-brand);
+    border-color: var(--lc-brand);
+    color: var(--lc-brand-contrast);
+}
+.btn-primary:hover { background-color: var(--lc-brand-hover); border-color: var(--lc-brand-hover); color: var(--lc-brand-contrast); }
+.btn-primary:not(:disabled):not(.disabled):active { background-color: var(--lc-brand-active); border-color: var(--lc-brand-active); }
+
+/* Tombol sekunder jadi netral, bukan abu tua Bootstrap. */
+.btn-secondary,
+.btn-default {
+    background-color: var(--lc-surface);
+    border-color: var(--lc-border-2);
+    color: var(--lc-text);
+}
+.btn-secondary:hover,
+.btn-default:hover {
+    background-color: var(--lc-surface-3);
+    border-color: var(--lc-border-2);
+    color: var(--lc-text);
+}
+
+.btn-light {
+    background-color: var(--lc-surface-2);
+    border-color: var(--lc-border);
+    color: var(--lc-text);
+}
+.btn-light:hover { background-color: var(--lc-surface-3); border-color: var(--lc-border-2); color: var(--lc-text); }
+
+.btn-success { background-color: var(--lc-success); border-color: var(--lc-success); }
+.btn-warning { background-color: var(--lc-warning); border-color: var(--lc-warning); color: #fff; }
+.btn-danger  { background-color: var(--lc-danger);  border-color: var(--lc-danger); }
+.btn-info    { background-color: var(--lc-info);    border-color: var(--lc-info); }
+.btn-success:hover, .btn-warning:hover, .btn-danger:hover, .btn-info:hover { filter: brightness(.93); color: #fff; }
+
+.btn-outline-primary   { color: var(--lc-brand);   border-color: var(--lc-brand-border); }
+.btn-outline-primary:hover { background-color: var(--lc-brand); border-color: var(--lc-brand); color: var(--lc-brand-contrast); }
+.btn-outline-secondary { color: var(--lc-text-muted); border-color: var(--lc-border-2); }
+.btn-outline-secondary:hover { background-color: var(--lc-surface-3); border-color: var(--lc-border-2); color: var(--lc-text); }
+.btn-outline-danger    { color: var(--lc-danger);  border-color: var(--lc-danger-border); }
+.btn-outline-danger:hover { background-color: var(--lc-danger); border-color: var(--lc-danger); color: #fff; }
+.btn-outline-success   { color: var(--lc-success); border-color: var(--lc-success-border); }
+.btn-outline-success:hover { background-color: var(--lc-success); border-color: var(--lc-success); color: #fff; }
+
+.btn-link { color: var(--lc-brand); font-weight: 500; }
+
+.btn-group > .btn:not(:first-child) { border-top-left-radius: 0; border-bottom-left-radius: 0; }
+.btn-group > .btn:not(:last-child)  { border-top-right-radius: 0; border-bottom-right-radius: 0; }
+
+/* ==========================================================================
+   9. Form
+   ========================================================================== */
+
+label,
+.col-form-label {
+    color: var(--lc-text);
+    font-size: .82rem;
+    font-weight: 500;
+    margin-bottom: .35rem;
+}
+
+.form-control,
+.custom-select,
+textarea.form-control {
+    background-color: var(--lc-surface);
+    border: 1px solid var(--lc-border-2);
+    border-radius: var(--lc-radius-sm);
+    color: var(--lc-text);
+    font-size: .875rem;
+    padding: .44rem .7rem;
+    height: auto;
+    box-shadow: none;
+    transition: border-color .12s ease, box-shadow .12s ease;
+}
+
+.form-control:focus,
+.custom-select:focus {
+    background-color: var(--lc-surface);
+    border-color: var(--lc-brand);
+    box-shadow: var(--lc-ring);
+    color: var(--lc-text);
+}
+
+.form-control::placeholder { color: var(--lc-text-subtle); }
+
+.form-control:disabled,
+.form-control[readonly] {
+    background-color: var(--lc-surface-3);
+    color: var(--lc-text-muted);
+    border-color: var(--lc-border);
+}
+
+.form-control-sm { font-size: .8rem; padding: .28rem .55rem; }
+
+.form-control.is-invalid,
+.custom-select.is-invalid { border-color: var(--lc-danger); background-image: none; }
+.form-control.is-invalid:focus { box-shadow: 0 0 0 3px var(--lc-danger-soft); }
+
+.invalid-feedback { color: var(--lc-danger); font-size: .78rem; }
+.form-text, .help-block { color: var(--lc-text-muted); font-size: .78rem; }
+
+.input-group-text {
+    background-color: var(--lc-surface-2);
+    border-color: var(--lc-border-2);
+    color: var(--lc-text-muted);
+    border-radius: var(--lc-radius-sm);
+    font-size: .82rem;
+    padding: .44rem .7rem;
+}
+
+.input-group > .input-group-prepend > .input-group-text { border-radius: var(--lc-radius-sm) 0 0 var(--lc-radius-sm); }
+.input-group > .input-group-append > .input-group-text  { border-radius: 0 var(--lc-radius-sm) var(--lc-radius-sm) 0; }
+
+.custom-control-label { font-weight: 400; }
+.custom-control-input:checked ~ .custom-control-label::before {
+    background-color: var(--lc-brand);
+    border-color: var(--lc-brand);
+}
+.custom-control-input:focus ~ .custom-control-label::before { box-shadow: var(--lc-ring); }
+
+.custom-switch .custom-control-label::after { background-color: var(--lc-border-2); }
+
+/* ==========================================================================
+   10. Tabel
+   ========================================================================== */
+
+.table {
+    color: var(--lc-text);
+    font-size: .85rem;
+    margin-bottom: 0;
+}
+
+.table thead th {
+    background-color: var(--lc-surface-2);
+    border-bottom: 1px solid var(--lc-border);
+    border-top: none;
+    color: var(--lc-text-muted);
+    font-size: .74rem;
+    font-weight: 600;
+    letter-spacing: .045em;
+    text-transform: uppercase;
+    padding: .65rem .8rem;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+.table td,
+.table th {
+    border-top: 1px solid var(--lc-border);
+    padding: .62rem .8rem;
+    vertical-align: middle;
+}
+
+.table-sm td, .table-sm th { padding: .4rem .6rem; }
+
+.table-bordered,
+.table-bordered td,
+.table-bordered th { border-color: var(--lc-border); }
+
+.table-hover tbody tr { transition: background-color .1s ease; }
+.table-hover tbody tr:hover { background-color: var(--lc-surface-2); color: var(--lc-text); }
+
+.table-striped tbody tr:nth-of-type(odd) { background-color: var(--lc-surface-2); }
+
+.table thead.thead-light th,
+.table thead.thead-dark th {
+    background-color: var(--lc-surface-2);
+    color: var(--lc-text-muted);
+    border-color: var(--lc-border);
+}
+
+/*
+ * Tabel lebar sebelumnya terpotong di tepi card. Body card yang isinya memang
+ * tabel dibuat bisa digulir mendatar. Yang memuat dropdown dikecualikan, karena
+ * konteks gulir akan memotong menu yang mengambang.
+ */
+.card-body:has(> .table):not(:has(.dropdown-menu)),
+.card-body:has(> .table-responsive):not(:has(.dropdown-menu)) {
+    overflow-x: auto;
+}
+
+.table-responsive { -webkit-overflow-scrolling: touch; }
+
+/* Tabel yang menempel langsung di card tanpa padding ganda. */
+.card-body.p-0 > .table > thead > tr > th:first-child,
+.card-body.p-0 > .table > tbody > tr > td:first-child { padding-left: 1.15rem; }
+.card-body.p-0 > .table > thead > tr > th:last-child,
+.card-body.p-0 > .table > tbody > tr > td:last-child { padding-right: 1.15rem; }
+
+/* ==========================================================================
+   11. DataTables
+   ========================================================================== */
+
+.dataTables_wrapper .dataTables_length,
+.dataTables_wrapper .dataTables_filter,
+.dataTables_wrapper .dataTables_info,
+.dataTables_wrapper .dataTables_paginate {
+    color: var(--lc-text-muted);
+    font-size: .8rem;
+}
+
+.dataTables_wrapper .dataTables_length select,
+.dataTables_wrapper .dataTables_filter input {
+    background-color: var(--lc-surface);
+    border: 1px solid var(--lc-border-2);
+    border-radius: var(--lc-radius-sm);
+    color: var(--lc-text);
+    padding: .28rem .55rem;
+    margin: 0 .35rem;
+}
+
+/* Ruang untuk panah select bawaan, supaya tidak menimpa angkanya. */
+.dataTables_wrapper .dataTables_length select {
+    padding-right: 1.5rem;
+    min-width: 4.25rem;
+}
+
+.dataTables_wrapper .dataTables_filter input { min-width: 12rem; }
+
+.dataTables_wrapper .dataTables_filter input:focus,
+.dataTables_wrapper .dataTables_length select:focus {
+    border-color: var(--lc-brand);
+    box-shadow: var(--lc-ring);
+    outline: none;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+    background: transparent !important;
+    border: 1px solid transparent !important;
+    border-radius: var(--lc-radius-sm) !important;
+    color: var(--lc-text-muted) !important;
+    padding: .28rem .6rem !important;
+    margin: 0 1px !important;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+    background: var(--lc-surface-3) !important;
+    border-color: var(--lc-border) !important;
+    color: var(--lc-text) !important;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button.current,
+.dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
+    background: var(--lc-brand) !important;
+    border-color: var(--lc-brand) !important;
+    color: var(--lc-brand-contrast) !important;
+    font-weight: 600;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button.disabled,
+.dataTables_wrapper .dataTables_paginate .paginate_button.disabled:hover {
+    background: transparent !important;
+    border-color: transparent !important;
+    color: var(--lc-text-subtle) !important;
+}
+
+table.dataTable thead th.sorting,
+table.dataTable thead th.sorting_asc,
+table.dataTable thead th.sorting_desc { cursor: pointer; }
+
+/* Pagination Bootstrap / Laravel */
+.page-link {
+    background-color: var(--lc-surface);
+    border-color: var(--lc-border);
+    color: var(--lc-text-muted);
+    font-size: .82rem;
+    padding: .4rem .7rem;
+}
+.page-link:hover { background-color: var(--lc-surface-3); border-color: var(--lc-border-2); color: var(--lc-text); }
+.page-item.active .page-link {
+    background-color: var(--lc-brand);
+    border-color: var(--lc-brand);
+    color: var(--lc-brand-contrast);
+}
+.page-item.disabled .page-link { background-color: var(--lc-surface-2); color: var(--lc-text-subtle); border-color: var(--lc-border); }
+.pagination { gap: 2px; }
+.page-item:first-child .page-link { border-radius: var(--lc-radius-sm) 0 0 var(--lc-radius-sm); }
+.page-item:last-child .page-link  { border-radius: 0 var(--lc-radius-sm) var(--lc-radius-sm) 0; }
+
+/* ==========================================================================
+   12. Select2
+   ========================================================================== */
+
+.select2-container--bootstrap4 .select2-selection {
+    background-color: var(--lc-surface);
+    border: 1px solid var(--lc-border-2);
+    border-radius: var(--lc-radius-sm);
+    color: var(--lc-text);
+    font-size: .875rem;
+}
+
+.select2-container--bootstrap4.select2-container--focus .select2-selection,
+.select2-container--bootstrap4.select2-container--open .select2-selection {
+    border-color: var(--lc-brand);
+    box-shadow: var(--lc-ring);
+}
+
+.select2-container--bootstrap4 .select2-selection--single { height: calc(1.45em + .88rem + 2px); }
+.select2-container--bootstrap4 .select2-selection--single .select2-selection__rendered {
+    color: var(--lc-text);
+    line-height: calc(1.45em + .88rem);
+    padding-left: .7rem;
+}
+.select2-container--bootstrap4 .select2-selection--single .select2-selection__placeholder { color: var(--lc-text-subtle); }
+
+.select2-container--bootstrap4 .select2-dropdown {
+    background-color: var(--lc-surface);
+    border-color: var(--lc-border-2);
+    border-radius: var(--lc-radius);
+    box-shadow: var(--lc-shadow-lg);
+    overflow: hidden;
+}
+
+.select2-container--bootstrap4 .select2-results__option {
+    color: var(--lc-text);
+    font-size: .875rem;
+    padding: .45rem .7rem;
+}
+
+.select2-container--bootstrap4 .select2-results__option--highlighted,
+.select2-container--bootstrap4 .select2-results__option--highlighted[aria-selected] {
+    background-color: var(--lc-brand-soft) !important;
+    color: var(--lc-text) !important;
+}
+
+.select2-container--bootstrap4 .select2-results__option[aria-selected="true"] {
+    background-color: var(--lc-brand) !important;
+    color: var(--lc-brand-contrast) !important;
+}
+
+.select2-container--bootstrap4 .select2-search--dropdown .select2-search__field {
+    background-color: var(--lc-surface);
+    border: 1px solid var(--lc-border-2);
+    border-radius: var(--lc-radius-sm);
+    color: var(--lc-text);
+    padding: .35rem .55rem;
+}
+
+.select2-container--bootstrap4 .select2-selection--multiple .select2-selection__choice {
+    background-color: var(--lc-brand-soft);
+    border: 1px solid var(--lc-brand-border);
+    border-radius: var(--lc-radius-sm);
+    color: var(--lc-brand);
+    font-size: .8rem;
+    padding: .1rem .4rem;
+}
+
+/* ==========================================================================
+   13. Alert, badge, notifikasi
+   ========================================================================== */
+
+/*
+ * Alert Bootstrap 4 pakai pastel lemah dengan teks nyaris tak terbaca.
+ * Diganti: latar lembut, garis kiri tegas, teks kontras.
+ */
+.alert {
+    border: 1px solid transparent;
+    border-left-width: 3px;
+    border-radius: var(--lc-radius);
+    font-size: .85rem;
+    padding: .8rem 1rem;
+    box-shadow: var(--lc-shadow-xs);
+}
+
+.alert-success { background-color: var(--lc-success-soft); border-color: var(--lc-success-border); border-left-color: var(--lc-success); color: var(--lc-success); }
+.alert-warning { background-color: var(--lc-warning-soft); border-color: var(--lc-warning-border); border-left-color: var(--lc-warning); color: var(--lc-warning); }
+.alert-danger  { background-color: var(--lc-danger-soft);  border-color: var(--lc-danger-border);  border-left-color: var(--lc-danger);  color: var(--lc-danger); }
+.alert-info    { background-color: var(--lc-info-soft);    border-color: var(--lc-info-border);    border-left-color: var(--lc-info);    color: var(--lc-info); }
+.alert-secondary, .alert-light { background-color: var(--lc-surface-2); border-color: var(--lc-border); border-left-color: var(--lc-border-2); color: var(--lc-text); }
+
+.alert h6 { color: inherit; font-weight: 600; }
+.alert .close { color: inherit; opacity: .5; text-shadow: none; font-size: 1.2rem; }
+.alert .close:hover { opacity: .9; color: inherit; }
+
+.badge {
+    border-radius: var(--lc-radius-sm);
+    font-size: .72rem;
+    font-weight: 600;
+    letter-spacing: .01em;
+    padding: .28em .55em;
+}
+
+.badge-primary   { background-color: var(--lc-brand-soft);   color: var(--lc-brand); }
+.badge-success   { background-color: var(--lc-success-soft); color: var(--lc-success); }
+.badge-warning   { background-color: var(--lc-warning-soft); color: var(--lc-warning); }
+.badge-danger    { background-color: var(--lc-danger-soft);  color: var(--lc-danger); }
+.badge-info      { background-color: var(--lc-info-soft);    color: var(--lc-info); }
+.badge-secondary { background-color: var(--lc-surface-3);    color: var(--lc-text-muted); }
+.badge-light     { background-color: var(--lc-surface-3);    color: var(--lc-text-muted); }
+.badge-dark      { background-color: var(--lc-text);         color: var(--lc-surface); }
+
+/* Badge di navbar tetap solid supaya kelihatan. */
+.navbar-badge.badge-warning { background-color: var(--lc-warning); color: #fff; }
+.navbar-badge.badge-danger  { background-color: var(--lc-danger);  color: #fff; }
+
+/* ==========================================================================
+   14. Dropdown, modal, tab
+   ========================================================================== */
+
+.dropdown-menu {
+    background-color: var(--lc-surface);
+    border: 1px solid var(--lc-border);
+    border-radius: var(--lc-radius);
+    box-shadow: var(--lc-shadow-lg);
+    padding: .35rem;
+    font-size: .85rem;
+    min-width: 11rem;
+}
+
+.dropdown-item {
+    border-radius: var(--lc-radius-sm);
+    color: var(--lc-text);
+    padding: .45rem .6rem;
+}
+
+.dropdown-item:hover,
+.dropdown-item:focus { background-color: var(--lc-surface-3); color: var(--lc-text); }
+.dropdown-item.active,
+.dropdown-item:active { background-color: var(--lc-brand); color: var(--lc-brand-contrast); }
+.dropdown-item.text-danger:hover { background-color: var(--lc-danger-soft); color: var(--lc-danger) !important; }
+.dropdown-divider { border-top-color: var(--lc-border); margin: .35rem 0; }
+.dropdown-item-text { color: var(--lc-text-muted); padding: .35rem .6rem; }
+
+.modal-content {
+    background-color: var(--lc-surface);
+    border: 1px solid var(--lc-border);
+    border-radius: var(--lc-radius-lg);
+    box-shadow: var(--lc-shadow-lg);
+}
+.modal-header { border-bottom-color: var(--lc-border); padding: 1rem 1.15rem; }
+.modal-title { font-size: 1rem; font-weight: 600; }
+.modal-body { padding: 1.15rem; }
+.modal-footer { border-top-color: var(--lc-border); padding: .85rem 1.15rem; }
+.modal-backdrop.show { opacity: .45; }
+.close { color: var(--lc-text-muted); text-shadow: none; opacity: .7; }
+.close:hover { color: var(--lc-text); opacity: 1; }
+
+.nav-tabs { border-bottom-color: var(--lc-border); }
+
+.nav-tabs .nav-link {
+    border: none;
+    border-bottom: 2px solid transparent;
+    border-radius: 0;
+    color: var(--lc-text-muted);
+    font-size: .875rem;
+    font-weight: 500;
+    padding: .65rem .9rem;
+    transition: color .12s ease, border-color .12s ease;
+}
+
+.nav-tabs .nav-link:hover { border-color: transparent transparent var(--lc-border-2); color: var(--lc-text); }
+
+.nav-tabs .nav-link.active,
+.card-outline-tabs .nav-tabs .nav-link.active {
+    background-color: transparent;
+    border-color: transparent transparent var(--lc-brand);
+    color: var(--lc-brand);
+}
+
+.card.card-outline-tabs > .card-header { border-bottom: 1px solid var(--lc-border); padding: 0 .5rem; }
+.card.card-outline-tabs > .card-header a.active { border-top: none !important; }
+
+.nav-pills .nav-link { border-radius: var(--lc-radius-sm); color: var(--lc-text-muted); font-size: .85rem; }
+.nav-pills .nav-link.active { background-color: var(--lc-brand); color: var(--lc-brand-contrast); }
+
+.list-group-item {
+    background-color: var(--lc-surface);
+    border-color: var(--lc-border);
+    color: var(--lc-text);
+    font-size: .85rem;
+}
+.list-group-item.active { background-color: var(--lc-brand); border-color: var(--lc-brand); color: var(--lc-brand-contrast); }
+.list-group-item-action:hover { background-color: var(--lc-surface-2); color: var(--lc-text); }
+
+.progress { background-color: var(--lc-surface-3); border-radius: 999px; height: .5rem; }
+.progress-bar { background-color: var(--lc-brand); border-radius: 999px; }
+
+.tooltip-inner {
+    background-color: var(--lc-text);
+    border-radius: var(--lc-radius-sm);
+    font-size: .78rem;
+    padding: .35rem .55rem;
+}
+
+.popover {
+    background-color: var(--lc-surface);
+    border-color: var(--lc-border);
+    border-radius: var(--lc-radius);
+    box-shadow: var(--lc-shadow-lg);
+}
+.popover-header { background-color: var(--lc-surface-2); border-bottom-color: var(--lc-border); color: var(--lc-text); }
+.popover-body { color: var(--lc-text); }
+
+/* ==========================================================================
+   15. Halaman login
+   ========================================================================== */
+
+body.login-page {
+    background: var(--lc-bg);
+    align-items: center;
+}
+
+/* Aksen lembut di latar, biar tidak polos. */
+body.login-page::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background:
+        radial-gradient(60rem 30rem at 15% -10%, var(--lc-brand-soft), transparent 60%),
+        radial-gradient(50rem 26rem at 90% 110%, var(--lc-brand-soft), transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.login-box { position: relative; z-index: 1; width: 25rem; max-width: 92vw; }
+
+.login-logo { margin-bottom: 1.5rem; font-size: 1.5rem; }
+.login-logo b { color: var(--lc-text); font-weight: 600; letter-spacing: -.02em; }
+
+.login-page .card {
+    border-radius: var(--lc-radius-lg);
+    box-shadow: var(--lc-shadow-lg);
+    border-color: var(--lc-border);
+}
+
+.login-card-body { padding: 1.75rem; border-radius: var(--lc-radius-lg); background-color: var(--lc-surface); }
+
+.login-box-msg {
+    color: var(--lc-text-muted);
+    font-size: .875rem;
+    padding: 0 0 1.25rem;
+}
+
+.login-page .icheck-primary > label { font-size: .85rem; color: var(--lc-text-muted); }
+
+/* ==========================================================================
+   16. Lain-lain
+   ========================================================================== */
+
+/* Utility bg-* Bootstrap dibuat mengikuti palet, supaya tidak ada warna liar. */
+.bg-white     { background-color: var(--lc-surface) !important; }
+.bg-light     { background-color: var(--lc-surface-2) !important; }
+.text-primary { color: var(--lc-brand) !important; }
+.text-success { color: var(--lc-success) !important; }
+.text-warning { color: var(--lc-warning) !important; }
+.text-danger  { color: var(--lc-danger) !important; }
+.text-info    { color: var(--lc-info) !important; }
+
+.border, .border-top, .border-bottom, .border-left, .border-right { border-color: var(--lc-border) !important; }
+
+/* Scrollbar halaman */
+::-webkit-scrollbar { width: 11px; height: 11px; }
+::-webkit-scrollbar-track { background: var(--lc-surface-2); }
+::-webkit-scrollbar-thumb { background: var(--lc-border-2); border: 3px solid var(--lc-surface-2); border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: var(--lc-text-subtle); }
+
+/* Hormati preferensi pengguna yang mematikan animasi. */
+@media (prefers-reduced-motion: reduce) {
+    * { transition-duration: .01ms !important; animation-duration: .01ms !important; }
+}
+
+/* Cetak: buang kromnya, sisakan isi. */
+@media print {
+    .main-sidebar,
+    .main-header,
+    .main-footer,
+    .content-header,
+    .card-tools,
+    .no-print { display: none !important; }
+
+    body, .wrapper, .content-wrapper { background: #fff !important; color: #000 !important; }
+    .content-wrapper { margin-left: 0 !important; }
+    .card { border: 1px solid #ccc !important; box-shadow: none !important; break-inside: avoid; }
+    .table thead th { background: #f2f2f2 !important; color: #000 !important; }
+}

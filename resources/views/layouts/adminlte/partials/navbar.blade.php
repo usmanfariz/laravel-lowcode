@@ -7,6 +7,12 @@
 
     <ul class="navbar-nav ml-auto">
         <li class="nav-item">
+            <a class="nav-link" href="#" role="button" id="lc-theme-toggle"
+               title="Mode terang / gelap" aria-label="Ganti mode terang atau gelap">
+                <i class="fas fa-moon" id="lc-theme-icon"></i>
+            </a>
+        </li>
+        <li class="nav-item">
             <a class="nav-link" href="{{ route('exports.index') }}" title="Berkas ekspor">
                 <i class="fas fa-file-download"></i>
                 <span class="badge badge-warning navbar-badge d-none" id="export-badge"></span>
@@ -46,5 +52,40 @@ $(function () {
     cekEkspor();
     setInterval(cekEkspor, 30000);
 });
+
+// Mode gelap. Nilainya sudah diterapkan lebih awal di <head>; di sini hanya
+// menangani penggantian dan menyelaraskan ikon dengan keadaan sekarang.
+(function () {
+    const akar = document.documentElement;
+    const ikon = document.getElementById('lc-theme-icon');
+
+    function selaraskan() {
+        ikon.className = akar.getAttribute('data-lc-theme') === 'dark'
+            ? 'fas fa-sun'
+            : 'fas fa-moon';
+    }
+
+    selaraskan();
+
+    document.getElementById('lc-theme-toggle').addEventListener('click', function (e) {
+        e.preventDefault();
+        const gelap = akar.getAttribute('data-lc-theme') === 'dark';
+
+        if (gelap) {
+            akar.removeAttribute('data-lc-theme');
+        } else {
+            akar.setAttribute('data-lc-theme', 'dark');
+        }
+
+        try {
+            localStorage.setItem('lc-theme', gelap ? 'light' : 'dark');
+        } catch (err) { /* localStorage diblokir: pilihan tidak tersimpan. */ }
+
+        selaraskan();
+
+        // Chart membaca warnanya dari token tema, jadi perlu diberi tahu.
+        window.dispatchEvent(new CustomEvent('lc-theme-change'));
+    });
+})();
 </script>
 @endpush

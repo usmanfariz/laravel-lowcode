@@ -805,9 +805,139 @@ sebagai jumlah baris bawaan bila form atau report tidak menentukan sendiri. Untu
 gambar diambil lewat path berkas (`setting_file_path()`), bukan URL — DomPDF membaca
 gambar dari sistem berkas.
 
+## 11p. Titik ekstensi, penguncian, dan field terhitung
+
+Empat penambahan yang saling menyambung. Tiga yang pertama menutup lubang di
+metadata yang sudah ada; yang terakhir menambah kemampuan baru.
+
+### Baris total detail
+
+`form_details.show_total_row` ada sejak awal dan bisa dicentang admin, tapi tidak
+pernah dirender — tidak ada cara menyatakan **kolom mana** yang dijumlahkan.
+Ditambahkan `form_fields.show_total`, mengikuti nama `report_columns.show_total`
+yang lebih dulu ada.
+
+Totalnya dihitung di klien dan **tidak pernah dikirim ke server**: tidak ada input
+tersembunyi yang membawanya. Yang tersimpan tetap nilai per baris, jadi tidak ada
+permukaan yang bisa dipalsukan lewat sini. Ini berbeda dari field terhitung di
+bawah, yang justru **harus** dihitung ulang di server.
+
+### Registry kode: `config/lowcode.php`
+
+Whitelist ketiga, sejajar dengan `data_sources` untuk tabel dan `SqlExpressionGuard`
+untuk ekspresi. Isinya dua daftar: `handlers` (kode yang dijalankan tombol) dan
+`hooks` (kode yang ikut berjalan saat menyimpan).
+
+> **Metadata tidak pernah menyebut nama class.** `form_actions.target_value` hanya
+> menyimpan kunci. Kalau engine boleh melakukan `new $action->target_value`, siapa
+> pun yang dapat menyunting metadata lewat builder bisa menjalankan class apa pun
+> di aplikasi ini — eksekusi kode lewat layar admin.
+
+`LowcodeRegistry` adalah satu-satunya tempat kunci berubah menjadi objek, sehingga
+satu-satunya tempat yang perlu diperiksa saat menanyakan "apa saja yang bisa
+dijalankan engine ini". Kunci yang class-nya tidak ada atau tidak memenuhi kontrak
+**dilaporkan dengan alasannya** di builder, bukan disaring diam-diam — kunci yang
+hilang tanpa jejak dari daftar tidak memberi petunjuk apa pun.
+
+**Handler** dijalankan lewat `POST forms/{code}/action/{action}`. Izin diperiksa di
+controller, bukan di dalam handler: handler yang lupa memeriksanya tetap tidak bisa
+ditembus. Sisi klien tidak berubah sama sekali — JS halaman daftar sudah menangani
+aksi POST via ajax, memuat ulang tabel, dan menampilkan `responseJSON.message`.
+
+**Hook** dikunci per kode form di config, **bukan** dipilih dari builder. Aturan
+bisnis yang wajib jalan tidak seharusnya bisa dimatikan lewat layar admin —
+mematikan "posting stok" berarti inventori diam-diam berhenti akurat. Halaman
+Pengaturan Form menampilkan hook yang terpasang sebagai informasi, supaya tidak
+menjadi sihir tak terlihat.
+
+Seluruh titik hook dipanggil **di dalam transaksi** penulisan barisnya. Itu memang
+gunanya: nota tidak boleh tersimpan kalau stoknya gagal dikurangi. `afterSave`
+dipanggil setelah `saveDetails()` agar hook melihat nota yang sudah utuh.
+
+`ActionFailedException` dipisahkan dari exception lain karena pesannya ditampilkan
+apa adanya ke pengguna; pesan exception sembarangan bisa membocorkan detail internal.
+
+### Penguncian baris
+
+`forms.lock_condition` + `lock_message`. Bentuknya sengaja sama dengan
+`form_actions.show_condition` — `{"kolom": "nilai"}` atau `{"kolom": ["a","b"]}` —
+supaya admin hanya perlu memahami satu sintaks, dan dievaluasi `RowCondition` yang
+menyalin persis semantik sisi klien, termasuk perbandingan sebagai string agar `1`
+dari MySQL dan `"1"` dari metadata dianggap sama.
+
+Penjaganya di `FormRepository::update()` dan `delete()`, bukan di controller: itu
+satu-satunya jalan yang dilalui semua penulisan. Menyembunyikan tombol lewat
+`show_condition` saja tidak cukup — form edit tetap bisa dibuka lewat URL langsung.
+
+> **Kondisi kosong berarti "tanpa syarat", dan itu benar untuk menampilkan tombol
+> tapi bencana untuk mengunci.** Penjaganya memeriksa `isEmpty()` lebih dulu; tanpa
+> itu, form yang tidak menyetel penguncian akan mengunci seluruh barisnya.
+
+Kondisi yang menunjuk **kolom terblokir** ditolak validasi: kolom itu tidak pernah
+ikut terbaca, sehingga penguncian akan tampak menyala tapi diam-diam tidak berlaku.
+
+`form_actions.show_condition` sebelumnya berfungsi di runtime tapi **tidak punya
+editor** — hanya bisa diisi lewat DB. Editornya ditambahkan bersamaan, memakai
+partial yang sama dengan penguncian.
+
+### Field terhitung
+
+`form_fields.formula`, diuraikan `App\Support\FormulaEvaluator`.
+
+**Parser, bukan penyaring.** Penyaring harus menebak apa yang berbahaya; parser
+hanya mengerti angka, nama field, empat operator, kurung, dan `sum()` — di luar itu
+tidak bisa dinyatakan sama sekali. Tidak ada `eval()`, tidak ada pemanggilan fungsi
+PHP, tidak ada jalan menuju SQL.
+
+```
+expr    := term (('+' | '-') term)*
+term    := unary (('*' | '/') unary)*
+unary   := '-' unary | primary
+primary := ANGKA | 'sum' '(' NAMA '.' NAMA ')' | NAMA | '(' expr ')'
+```
+
+> **Rumus yang hanya dihitung di klien bukan perhitungan — ia saran.** Pengguna
+> tinggal membuka devtools dan mem-POST subtotal sesukanya. Karena itu `mapValues()`
+> menghitung ulang field ber-rumus dan **mengabaikan nilai kiriman** sepenuhnya.
+> Konsekuensinya field terhitung otomatis `is_readonly`.
+
+Urutan hitungnya: baris detail lebih dulu (`withComputedDetails()`), lalu jumlah per
+kolom (`detailSums()`), baru field induk. Rumus induk seperti `sum(items.subtotal)`
+menjumlahkan kolom yang nilainya sendiri hasil rumus — menjumlahkan nilai kiriman
+akan salah di sini.
+
+Rumus dihitung menurut urutan field, sehingga hanya boleh merujuk field terhitung
+yang urutannya lebih awal. Validasi menolak rujukan ke depan, karena hasilnya akan
+nol tanpa peringatan — dan nol yang salah pada kolom uang lebih berbahaya daripada
+galat.
+
+**Dua evaluator harus sepakat.** Padanan klien ada di `public/js/lc-formula.js`
+dengan tata bahasa yang sama. Dua hal yang mudah membuatnya berbeda dan sudah
+disamakan:
+
+| | Keputusan |
+|---|---|
+| Pembagian nol | menghasilkan `0`, bukan galat — penyebut sesaat kosong saat mengetik itu wajar |
+| Pembulatan | `round()` di kedua sisi. `castValue()` memakai `(int)` yang **memotong**: 2,7 jadi 2 di server tapi 3 di klien |
+
+`sum()` hanya boleh dipakai field induk; memakainya di dalam detail ditolak
+validasi, karena tidak ada baris yang bisa dijumlahkannya di sana.
+
 ## 12. Hal yang belum ditangani
 
 Tidak dibahas PDF dan belum ada di kode:
+
+- **`form_fields.show_condition`** — kolomnya ada di skema sejak awal, tapi tidak
+  ada di builder maupun renderer. Field yang muncul/hilang mengikuti isian lain
+  (mis. "Alasan Pembatalan" hanya saat status `void`) belum bisa dibuat.
+- **Rumus di luar aritmetika** — tidak ada perbandingan, kondisi, atau fungsi selain
+  `sum()`. Yang lebih rumit dari itu wilayah hook simpan (§11p).
+- **Editor kondisi berkunci banyak** — bentuk JSON-nya mendukung beberapa kolom dan
+  runtime membacanya, tapi editornya hanya satu pasang kolom–nilai. Kondisi berkunci
+  banyak diberi peringatan bahwa menyimpan akan menggantinya.
+- **Status dokumen sebagai konsep tersendiri** — belum ada; yang ada adalah
+  bahan-bahannya (penguncian, kondisi tampil, handler). Alur draft → posting → batal
+  disusun sendiri dari ketiganya.
 
 
 
@@ -840,6 +970,21 @@ Jangan melonggarkan setelan itu — itu pengerasan yang sengaja dipasang framewo
 Polanya: simpan `->all()`, bungkus `collect()` saat dibaca. Lihat
 `MenuService::rawTree()` dan `FormRenderer::tableOptions()`.
 
+**Metadata memilih dari daftar, tidak pernah mengarang.** Berlaku untuk tabel
+(`data_sources`), fungsi SQL (`SqlExpressionGuard`), dan sekarang kode
+(`config/lowcode.php`). Setiap kali metadata boleh menyebut sesuatu secara bebas,
+periksa apa yang bisa dilakukan orang yang menguasai layar builder.
+
+**Nilai yang dihitung untuk ditampilkan boleh di klien; nilai yang disimpan tidak
+pernah.** Baris total detail hanya tampilan, jadi cukup di klien. Field terhitung
+ikut tersimpan, jadi wajib dihitung ulang di server dan nilai kiriman diabaikan.
+Membedakan keduanya lebih penting daripada terlihat konsisten.
+
+**Kondisi kosong tidak berarti sama di semua tempat.** Untuk menampilkan sesuatu,
+"tanpa kondisi" berarti selalu tampil. Untuk melarang sesuatu, arti yang sama akan
+melarang segalanya. `RowCondition::isEmpty()` ada khusus supaya pemanggil harus
+memutuskannya secara sadar.
+
 ## 14. Roadmap
 
 | Tahap | Isi | Status |
@@ -856,8 +1001,15 @@ Polanya: simpan `->all()`, bungkus `collect()` saat dibaca. Lihat
 
 Di luar roadmap asli dan sudah selesai: **Form Builder** (§11e), **editor kolom list**,
 **Report Builder** (§11f), **versioning report**, **halaman log aktivitas** (§11g),
-**pengelola Sumber Data** (§11h), **editor detail & aksi** (§11i), dan
-**pesan validasi bahasa Indonesia**.
+**pengelola Sumber Data** (§11h), **editor detail & aksi** (§11i),
+**pesan validasi bahasa Indonesia**, serta **titik ekstensi kode, penguncian baris,
+dan field terhitung** (§11p).
+
+§11p adalah yang paling mengubah sifat aplikasinya: sebelumnya seluruh perilaku harus
+bisa dinyatakan sebagai metadata, sehingga aturan bisnis apa pun berarti menulis
+aplikasi terpisah. Dengan registry handler dan hook simpan, aturan itu bisa tinggal
+di dalam engine tanpa metadata kehilangan perannya sebagai satu-satunya yang
+menentukan **apa** yang boleh dijalankan.
 
 Tahap 3 dikerjakan mendahului tahap 2 — skema paling murah diperbaiki di awal.
 **Editor metadata form sudah ada** (lihat §11e) — prasyarat tahap 9 yang sebelumnya

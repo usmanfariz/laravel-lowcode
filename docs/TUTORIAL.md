@@ -115,6 +115,21 @@ dulu, jadi pemulihannya sendiri bisa dibatalkan.
 
 Isi **Catatan perubahan** sebelum menyimpan — tiga bulan lagi Anda akan berterima kasih.
 
+#### Penguncian
+
+Kartu **Penguncian** membuat baris berhenti bisa diubah setelah mencapai keadaan
+tertentu — nota yang sudah diposting, misalnya.
+
+Pilih kolomnya, isi nilainya, dan baris yang cocok akan menolak setiap perubahan
+maupun penghapusan. Beberapa nilai dipisah koma berarti "salah satu":
+`posted, void`.
+
+> Penguncian ditegakkan di lapisan penyimpanan, bukan sekadar menyembunyikan tombol.
+> Membuka form edit lewat URL langsung tetap ditolak.
+
+Kosongkan kolomnya untuk mematikan penguncian. **Pesan saat ditolak** menentukan
+kalimat yang dilihat pengguna; dikosongkan berarti memakai pesan bawaan.
+
 ### Tab Field
 
 Setiap field bisa diatur label, jenis input, lebar, wajib/tidak, dan sumber pilihannya.
@@ -131,6 +146,41 @@ Setiap field bisa diatur label, jenis input, lebar, wajib/tidak, dan sumber pili
 **Pilihan bertingkat** (kabupaten menyaring kecamatan): isi **Bergantung pada Field**
 dengan field induknya, dan **Kolom Penyaring** dengan kolom di tabel sumber yang
 dicocokkan. Daftar anak akan dimuat ulang setiap induknya berubah.
+
+#### Field terhitung (Rumus)
+
+Isi kotak **Rumus** untuk membuat nilai field diturunkan dari field lain, bukan
+diketik. Field itu otomatis menjadi hanya-baca.
+
+Yang boleh dipakai: angka, nama field, `+ - * / ( )`, dan `sum(kode_detail.nama_field)`.
+
+| Rumus | Dipasang di | Artinya |
+|---|---|---|
+| `qty * harga` | field detail | subtotal per baris |
+| `qty * harga * (1 - diskon / 100)` | field detail | subtotal setelah diskon |
+| `sum(items.subtotal)` | field induk | total seluruh baris detail |
+| `sum(items.subtotal) * 0.11` | field induk | pajak dari total |
+
+Aturan yang ditegakkan:
+
+- hanya untuk field angka (`number`, `decimal`, `currency`, `percentage`)
+- nama field yang dirujuk harus benar-benar ada di lingkup yang sama
+- `sum()` hanya boleh dipakai field **induk** — ia menjumlahkan baris detail
+- rumus tidak boleh merujuk dirinya sendiri, dan hanya boleh merujuk field
+  terhitung lain yang **urutannya lebih awal**
+
+> **Angka di layar hanya kenyamanan.** Nilai yang tersimpan selalu dihitung ulang di
+> server, dan apa pun yang dikirim untuk field terhitung diabaikan. Jadi tidak ada
+> yang bisa memalsukan subtotal lewat devtools.
+
+Pembagian dengan nol menghasilkan nol, bukan galat — penyebut yang sesaat kosong saat
+mengetik itu wajar.
+
+#### Baris total
+
+Centang **Jumlahkan di baris total** pada field angka di baris detail, lalu nyalakan
+**Tampilkan baris total** di tab Detail. Kolom yang ditandai akan dijumlahkan di kaki
+tabel dan ikut berubah saat baris ditambah, diubah, atau dihapus.
 
 ### Tab Tata Letak
 
@@ -163,6 +213,10 @@ Untuk satu induk dengan banyak baris anak — faktur dengan item, misalnya.
 
 Tanpa field, baris detail tidak akan menggambar apa pun.
 
+**Tampilkan baris total** menambahkan baris jumlah di kaki tabel. Kolom mana yang
+dijumlahkan ditentukan lewat centang *Jumlahkan di baris total* pada masing-masing
+field detail.
+
 ### Tab Aksi
 
 Tombol tambahan di halaman daftar. Tiga posisi:
@@ -171,12 +225,23 @@ Tombol tambahan di halaman daftar. Tiga posisi:
 - **Toolbar** — di kepala kartu
 - **Massal** — muncul setelah baris dicentang
 
-**Kondisi tampil** membuat tombol muncul selektif. Misalnya tombol *Setujui* yang hanya
-tampil pada baris berstatus draft. (Kondisi diisi lewat kolom `show_condition` berformat
-JSON, mis. `{"status": "draft"}`.)
+**Jenis aksi** ada lima:
 
-Aturan yang ditegakkan: aksi selain GET **wajib** punya pesan konfirmasi, dan aksi
-massal tidak boleh memakai GET.
+| Jenis | Tujuan diisi | Untuk apa |
+|---|---|---|
+| Route Laravel | nama route | pindah ke halaman lain di aplikasi ini |
+| URL langsung | alamat | pindah ke alamat mana pun |
+| Permintaan AJAX | alamat | panggil endpoint tanpa pindah halaman |
+| Buka modal | id modal | membuka modal yang sudah ada di halaman |
+| **Handler** | kunci terdaftar | menjalankan kode Anda — lihat bagian 11 |
+
+**Tampilkan tombol hanya bila** membuat tombol muncul selektif: pilih kolom, isi
+nilainya. Misalnya tombol *Posting* yang hanya tampil pada baris berstatus `draft`.
+Beberapa nilai dipisah koma berarti "salah satu". Kondisinya dinilai per baris di
+halaman daftar.
+
+Aturan yang ditegakkan: aksi selain GET **wajib** punya pesan konfirmasi, aksi
+massal tidak boleh memakai GET, dan aksi handler selalu POST.
 
 Form demo `product` sudah punya tiga contoh yang bisa langsung dicoba — Setujui
 (per baris, hanya muncul pada status draft), Arsipkan (massal), dan Cetak Label
@@ -438,6 +503,87 @@ Setiap penyimpanan tercatat di Log Aktivitas lengkap dengan nilai lama dan barun
 
 ---
 
+## 11. Menyambung kode sendiri
+
+Sampai di sini semuanya diatur lewat layar. Sebagian aturan bisnis memang tidak bisa
+dinyatakan sebagai metadata — mengurangi stok saat nota disimpan, memberi nomor
+dokumen, memposting jurnal. Untuk itu ada dua titik sambung.
+
+Keduanya memakai **registry** di `config/lowcode.php`. Metadata hanya menyimpan
+*kunci*; nama class tidak pernah datang dari database. Kalau boleh, siapa pun yang
+dapat menyunting metadata lewat builder bisa menjalankan class apa pun di aplikasi
+ini.
+
+### Handler aksi — tombol yang menjalankan kode
+
+```php
+// app/Lowcode/Handlers/PostingStok.php
+class PostingStok implements \App\Contracts\FormActionHandler
+{
+    public function handle(Form $form, array $ids, User $user): string
+    {
+        // ... kurangi stok ...
+        return count($ids).' nota diposting.';
+    }
+}
+```
+
+```php
+// config/lowcode.php
+'handlers' => ['posting_stok' => App\Lowcode\Handlers\PostingStok::class],
+```
+
+Kuncinya lalu muncul sebagai pilihan di **Form Builder → Aksi** saat jenis aksinya
+*Handler*. Izin diperiksa engine, bukan di dalam handler — handler yang lupa
+memeriksanya tetap tidak bisa ditembus.
+
+Handler dijalankan **di dalam transaksi**. Melempar
+`App\Exceptions\ActionFailedException` membatalkan seluruh perubahannya, dan pesannya
+ditampilkan apa adanya ke pengguna. Exception lain tetap membatalkan transaksi tapi
+pesannya tidak ditampilkan — isinya bisa membocorkan detail internal.
+
+### Hook simpan — kode yang ikut berjalan saat menyimpan
+
+```php
+// app/Lowcode/Hooks/NomorNota.php
+class NomorNota implements \App\Contracts\FormHook
+{
+    use \App\Support\FormHookDefaults;   // sisanya no-op
+
+    public function beforeSave(Form $form, array $values, ?array $before, User $user): array
+    {
+        if ($before === null) {                    // hanya saat dibuat
+            $values['no_nota'] = 'INV-'.now()->format('Y').'-'.$this->urutan();
+        }
+
+        return $values;
+    }
+}
+```
+
+```php
+// config/lowcode.php
+'hooks' => ['nota_penjualan' => [App\Lowcode\Hooks\NomorNota::class]],
+```
+
+Titik yang tersedia: `beforeSave`, `afterSave`, `beforeDelete`, `afterDelete`.
+
+| Titik | Kapan | Untuk apa |
+|---|---|---|
+| `beforeSave` | sebelum baris ditulis | penomoran otomatis, nilai turunan |
+| `afterSave` | setelah baris **dan** detailnya tersimpan | posting stok, jurnal, notifikasi |
+| `beforeDelete` | sebelum baris dihapus | menolak penghapusan |
+| `afterDelete` | setelah baris dihapus | membalik efek samping |
+
+Semuanya berjalan **di dalam transaksi yang sama** dengan penulisan barisnya. Itu
+memang gunanya: nota tidak boleh tersimpan kalau stoknya gagal dikurangi.
+
+> Hook dikunci per kode form di config, **bukan** dipilih dari builder. Aturan bisnis
+> yang wajib jalan tidak seharusnya bisa dimatikan lewat layar admin. Halaman
+> Pengaturan Form menampilkan hook apa saja yang terpasang, sebagai informasi.
+
+---
+
 ## Masalah yang sering muncul
 
 **Form baru menampilkan 403.**
@@ -477,6 +623,13 @@ SQL, dan komentar ditolak — dan Anda butuh izin `system.raw_query`.
   keduanya diambil lewat `LEFT JOIN`.
 - **Baris detail ditulis ulang seluruhnya** setiap kali induknya disimpan.
 - **Ekspor dibatasi 50.000 baris**, berapa pun ambang yang disetel.
+- **Rumus hanya aritmetika** — `+ - * / ( )` dan `sum()`. Tidak ada perbandingan,
+  kondisi, atau fungsi lain. Yang lebih rumit dari itu wilayah hook simpan.
+- **Rumus dihitung menurut urutan field**, jadi rumus hanya boleh merujuk field
+  terhitung yang urutannya lebih awal.
+- **Editor kondisi hanya satu pasang kolom–nilai.** Bentuk JSON-nya mendukung
+  banyak kolom dan runtime tetap membacanya, tapi kondisi seperti itu tidak bisa
+  disunting lewat layar.
 
 Rincian teknis dan alasan di balik keputusan-keputusan ini ada di
 [`RANCANGAN.md`](RANCANGAN.md).

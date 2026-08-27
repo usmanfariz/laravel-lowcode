@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Builder\FormActionRequest;
 use App\Http\Requests\Builder\FormDetailRequest;
 use App\Models\Form;
+use App\Services\Form\LowcodeRegistry;
+use App\Support\ConditionInput;
 use App\Models\FormAction;
 use App\Models\FormDetail;
 use App\Services\Form\FormBuilderService;
@@ -111,6 +113,10 @@ class FormPartController extends Controller
         return view('builder.actions.index', [
             'form' => $form,
             'actions' => $form->allActions()->get(),
+            // Hanya kuncinya; nama class tidak perlu sampai ke layar.
+            'handlers' => array_keys(app(LowcodeRegistry::class)->handlers()),
+            'handlersRusak' => app(LowcodeRegistry::class)->invalidHandlers(),
+            'columns' => $this->formColumns($form),
         ]);
     }
 
@@ -190,14 +196,37 @@ class FormPartController extends Controller
 
     private function actionValues(FormActionRequest $request): array
     {
+        $kondisi = ConditionInput::build(
+            $request->input('condition_column'),
+            $request->input('condition_value'),
+        );
+
         return $this->dropNullDefaults([
-            ...$request->safe()->all(),
+            ...$request->safe()->except(['condition_column', 'condition_value']),
             'is_active' => $request->boolean('is_active'),
+            // Ditulis lewat query builder, jadi tidak lewat cast model.
+            // json_encode(null) menghasilkan string "null", bukan NULL.
+            'show_condition' => $kondisi === null ? null : json_encode($kondisi),
         ], ['css_class']);
     }
 
     private function assertOwned(Form $form, int $formId): void
     {
         abort_unless($formId === $form->id, 404);
+    }
+
+    /**
+     * Kolom yang boleh dipakai kondisi tampil. Sumber data bermasalah tidak
+     * boleh mematikan halaman builder-nya.
+     *
+     * @return array<int, string>
+     */
+    private function formColumns(Form $form): array
+    {
+        try {
+            return app(\App\Services\DataSourceResolver::class)->allowedColumns($form->table_name);
+        } catch (\Throwable) {
+            return [];
+        }
     }
 }

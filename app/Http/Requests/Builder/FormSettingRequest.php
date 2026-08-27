@@ -38,7 +38,39 @@ class FormSettingRequest extends FormRequest
             'allow_export' => ['nullable', 'boolean'],
             'allow_print' => ['nullable', 'boolean'],
             'is_active' => ['nullable', 'boolean'],
+            'lock_column' => ['nullable', 'string', 'max:100'],
+            'lock_value' => ['nullable', 'string', 'max:255'],
+            'lock_message' => ['nullable', 'string', 'max:255'],
             'note' => ['nullable', 'string', 'max:255'],
+        ];
+    }
+
+    public function after(): array
+    {
+        return [
+            function (\Illuminate\Validation\Validator $validator) {
+                $form = $this->route('form');
+
+                if (! $this->filled('lock_column') || ! $form) {
+                    return;
+                }
+
+                // Kolom terblokir tidak pernah ikut terbaca saat baris diambil,
+                // jadi kondisi yang menunjuk ke sana tidak akan pernah cocok —
+                // penguncian yang tampak menyala tapi diam-diam tidak berlaku.
+                $diizinkan = app(\App\Services\DataSourceResolver::class)
+                    ->allowedColumns($form->table_name);
+
+                if (! in_array($this->input('lock_column'), $diizinkan, true)) {
+                    $validator->errors()->add('lock_column',
+                        'Kolom tidak tersedia atau diblokir di sumber data.');
+                }
+
+                if (! $this->filled('lock_value')) {
+                    $validator->errors()->add('lock_value',
+                        'Isi nilai kuncinya, atau kosongkan kolomnya untuk mematikan penguncian.');
+                }
+            },
         ];
     }
 
@@ -48,6 +80,7 @@ class FormSettingRequest extends FormRequest
             'name' => 'nama', 'primary_key' => 'primary key',
             'layout_columns' => 'jumlah kolom', 'per_page' => 'baris per halaman',
             'permission_prefix' => 'prefix izin',
+            'lock_column' => 'kolom penguncian', 'lock_value' => 'nilai penguncian',
         ];
     }
 }

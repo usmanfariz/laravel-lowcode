@@ -114,6 +114,7 @@
                                 @foreach ([
                                     'route' => 'Route Laravel', 'url' => 'URL langsung',
                                     'ajax' => 'Permintaan AJAX', 'modal' => 'Buka modal',
+                                    'handler' => 'Handler (kode terdaftar)',
                                 ] as $v => $l)
                                     <option value="{{ $v }}" @selected(old('action_type', $editing->action_type ?? 'route') === $v)>{{ $l }}</option>
                                 @endforeach
@@ -123,11 +124,52 @@
 
                     <div class="form-group">
                         <label>Tujuan <span class="text-danger">*</span></label>
-                        <input type="text" name="target_value" class="form-control @error('target_value') is-invalid @enderror"
+
+                        {{-- Satu nilai, dua cara mengisinya: ketik bebas untuk
+                             route/URL/modal, pilih dari daftar untuk handler. --}}
+                        <input type="text" name="target_value" id="target-teks"
+                               class="form-control @error('target_value') is-invalid @enderror"
                                value="{{ old('target_value', $editing->target_value ?? '') }}" required
                                placeholder="nama route / URL / id modal">
-                        @error('target_value')<span class="invalid-feedback">{{ $message }}</span>@enderror
+
+                        <select id="target-handler" class="form-control d-none">
+                            <option value="">— pilih handler —</option>
+                            @foreach ($handlers as $kunci)
+                                <option value="{{ $kunci }}"
+                                    @selected(old('target_value', $editing->target_value ?? '') === $kunci)>
+                                    {{ $kunci }}
+                                </option>
+                            @endforeach
+                        </select>
+
+                        @error('target_value')<span class="invalid-feedback d-block">{{ $message }}</span>@enderror
+
+                        @if ($handlers === [] && $handlersRusak === [])
+                            <small class="form-text text-muted">
+                                Belum ada handler terdaftar. Tambahkan di
+                                <code>config/lowcode.php</code> pada bagian <code>handlers</code>.
+                            </small>
+                        @endif
+
+                        @if ($handlersRusak !== [])
+                            <div class="alert alert-warning mt-2 mb-0 py-2 px-3 small">
+                                <strong>Handler berikut terdaftar tapi tidak bisa dipakai:</strong>
+                                <ul class="mb-0 pl-3">
+                                    @foreach ($handlersRusak as $kunci => $alasan)
+                                        <li><code>{{ $kunci }}</code> — {{ $alasan }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
                     </div>
+
+                    @include('builder._condition', [
+                        'prefix' => 'condition',
+                        'columns' => $columns,
+                        'condition' => $editing->show_condition ?? null,
+                        'judul' => 'Tampilkan tombol hanya bila',
+                        'bantuan' => 'Dinilai per baris di halaman list. Kosongkan agar selalu tampil.',
+                    ])
 
                     <div class="row">
                         <div class="col-6 form-group">
@@ -213,6 +255,37 @@ $(function () {
                 .fail(() => alert('Gagal menyimpan urutan.'));
         },
     });
+});
+</script>
+@endpush
+
+@push('scripts')
+<script>
+$(function () {
+    // "Tujuan" punya dua cara pengisian, tapi tetap satu nilai terkirim:
+    // kotak teks yang bernama target_value. Daftar handler hanya menyalin
+    // pilihannya ke sana.
+    const $jenis = $('[name="action_type"]');
+    const $teks = $('#target-teks');
+    const $daftar = $('#target-handler');
+    const $metode = $('[name="http_method"]');
+
+    function selaraskan() {
+        const handler = $jenis.val() === 'handler';
+
+        $daftar.toggleClass('d-none', !handler);
+        $teks.toggleClass('d-none', handler);
+
+        if (handler) {
+            // Handler selalu POST; validasi server menolak selain itu.
+            $metode.val('POST');
+            if ($daftar.val()) $teks.val($daftar.val());
+        }
+    }
+
+    $daftar.on('change', function () { $teks.val($(this).val()); });
+    $jenis.on('change', selaraskan);
+    selaraskan();
 });
 </script>
 @endpush

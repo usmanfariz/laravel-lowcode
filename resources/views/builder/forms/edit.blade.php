@@ -71,6 +71,36 @@
             </div>
 
             <div class="card">
+                <div class="card-header"><h3 class="card-title">Penguncian</h3></div>
+                <div class="card-body">
+                    <p class="text-muted small">
+                        Baris yang memenuhi kondisi ini tidak bisa lagi diubah atau dihapus,
+                        termasuk lewat URL langsung. Kosongkan kolomnya untuk mematikan penguncian.
+                    </p>
+
+                    @include('builder._condition', [
+                        'prefix' => 'lock',
+                        'columns' => $columns,
+                        'condition' => $form->lock_condition,
+                        'judul' => 'Kunci baris bila',
+                        'bantuan' => 'Contoh: kolom "status" bernilai "posted".',
+                    ])
+
+                    <div class="form-group mb-0">
+                        <label>Pesan saat ditolak</label>
+                        <input type="text" name="lock_message"
+                               class="form-control @error('lock_message') is-invalid @enderror"
+                               value="{{ old('lock_message', $form->lock_message) }}"
+                               placeholder="Nota yang sudah diposting tidak dapat diubah.">
+                        @error('lock_message')<span class="invalid-feedback">{{ $message }}</span>@enderror
+                        <small class="form-text text-muted">
+                            Dikosongkan berarti memakai pesan bawaan.
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
                 <div class="card-header"><h3 class="card-title">Perilaku</h3></div>
                 <div class="card-body">
                     <div class="row">
@@ -182,6 +212,32 @@
     </div>
 
     <div class="col-md-4">
+        <div class="card">
+            <div class="card-header"><h3 class="card-title">Hook Simpan</h3></div>
+            <div class="card-body">
+                @if ($hooks === [])
+                    <p class="text-muted small mb-0">
+                        Tidak ada kode tambahan yang berjalan saat form ini menyimpan.
+                        Hook dipasang lewat <code>config/lowcode.php</code>.
+                    </p>
+                @else
+                    <p class="text-muted small">
+                        Kode berikut ikut berjalan saat form ini menulis data, di dalam
+                        transaksi yang sama:
+                    </p>
+                    <ul class="list-unstyled small mb-2">
+                        @foreach ($hooks as $hook)
+                            <li class="mb-1"><i class="fas fa-code text-muted mr-1"></i> <code>{{ $hook }}</code></li>
+                        @endforeach
+                    </ul>
+                    <p class="text-muted small mb-0">
+                        Dipasang di <code>config/lowcode.php</code>, bukan dari layar ini —
+                        aturan bisnis yang wajib jalan tidak seharusnya bisa dimatikan lewat admin.
+                    </p>
+                @endif
+            </div>
+        </div>
+
         <div class="card">
             <div class="card-header"><h3 class="card-title">Riwayat Versi</h3></div>
             <div class="card-body p-0" style="max-height:520px; overflow-y:auto">

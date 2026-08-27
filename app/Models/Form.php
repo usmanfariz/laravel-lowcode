@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[Fillable([
     'code', 'name', 'title', 'description', 'connection', 'table_name',
     'primary_key', 'key_type', 'type', 'layout_columns', 'scope_column',
+    'lock_condition', 'lock_message',
     'use_soft_delete', 'use_audit_column', 'default_order_column',
     'default_order_direction', 'per_page', 'permission_prefix',
     'allow_create', 'allow_edit', 'allow_delete', 'allow_export', 'allow_print',
@@ -19,6 +20,7 @@ class Form extends Model
     protected function casts(): array
     {
         return [
+            'lock_condition' => 'array',
             'use_soft_delete' => 'boolean',
             'use_audit_column' => 'boolean',
             'allow_create' => 'boolean',

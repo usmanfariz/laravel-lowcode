@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Builder;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Builder\FormSettingRequest;
 use App\Models\Form;
+use App\Support\ConditionInput;
+use App\Services\Form\LowcodeRegistry;
 use App\Services\DataSourceResolver;
 use App\Services\Form\FormBuilderService;
 use Illuminate\Http\RedirectResponse;
@@ -31,6 +33,8 @@ class FormBuilderController extends Controller
         return view('builder.forms.edit', [
             'form' => $form,
             'columns' => $this->tableColumns($form),
+            // Sekadar informasi: hook dipasang di config, bukan dari layar ini.
+            'hooks' => app(LowcodeRegistry::class)->hookClassesFor($form->code),
             'versions' => DB::table('form_versions')
                 ->where('form_id', $form->id)
                 ->orderByDesc('version')
@@ -46,7 +50,11 @@ class FormBuilderController extends Controller
         $this->builder->snapshot($form, $request->user(), $request->input('note'));
 
         $form->update([
-            ...$request->safe()->except('note'),
+            ...$request->safe()->except(['note', 'lock_column', 'lock_value']),
+            'lock_condition' => ConditionInput::build(
+                $request->input('lock_column'),
+                $request->input('lock_value'),
+            ),
             'use_soft_delete' => $request->boolean('use_soft_delete'),
             'use_audit_column' => $request->boolean('use_audit_column'),
             'allow_create' => $request->boolean('allow_create'),

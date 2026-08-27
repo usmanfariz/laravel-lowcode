@@ -27,5 +27,9 @@
        value="{{ $field->input_type === 'password' ? '' : $value }}"
        @if ($step) step="{{ $step }}" @endif
        @if ($field->placeholder) placeholder="{{ $field->placeholder }}" @endif
+       @if ($field->isComputed())
+           data-formula="{{ $field->formula }}"
+           data-format="{{ $field->input_type }}"
+       @endif
        @if ($field->is_readonly) readonly @endif
        @if ($field->is_required && $field->input_type !== 'hidden') required @endif>

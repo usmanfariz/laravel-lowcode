@@ -5,9 +5,12 @@ namespace App\Services\Form;
 use App\Models\Form;
 use App\Models\FormField;
 use App\Models\User;
+use App\Exceptions\RecordLockedException;
 use App\Exceptions\StaleRecordException;
 use App\Services\ActivityLogger;
 use App\Services\DataSourceResolver;
+use App\Support\FormulaEvaluator;
+use App\Support\RowCondition;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 
@@ -24,7 +27,22 @@ class FormRepository
         private readonly DataSourceResolver $sources,
         private readonly FileHandler $files,
         private readonly ActivityLogger $log,
+        private readonly LowcodeRegistry $registry,
     ) {}
+
+    /**
+     * Jalankan satu titik hook untuk seluruh hook yang terpasang di form ini.
+     *
+     * Sengaja dipanggil di dalam transaksi pemanggilnya: hook yang gagal harus
+     * membatalkan penulisan barisnya, bukan meninggalkan baris tersimpan dengan
+     * efek samping yang setengah jalan.
+     */
+    private function runHooks(Form $form, callable $jalankan): void
+    {
+        foreach ($this->registry->hooksFor($form) as $hook) {
+            $jalankan($hook);
+        }
+    }
 
     /** @return mixed primary key baris baru */
     public function create(Form $form, array $input, User $user): mixed
@@ -32,7 +50,12 @@ class FormRepository
         $this->sources->assertWritable($form->table_name);
 
         return DB::transaction(function () use ($form, $input, $user) {
+            $input = $this->withComputedDetails($form, $input);
             $values = $this->mapValues($form, $input, $user, null);
+
+            foreach ($this->registry->hooksFor($form) as $hook) {
+                $values = $hook->beforeSave($form, $values, null, $user);
+            }
 
             if ($form->use_audit_column) {
                 $values = $this->withAudit($form->table_name, $values, $user, true);
@@ -49,6 +72,10 @@ class FormRepository
             $id = $this->sources->query($form->table_name)->insertGetId($values);
 
             $this->saveDetails($form, $input, $id, $user);
+
+            // Setelah detail, supaya hook melihat nota yang sudah utuh.
+            $this->runHooks($form, fn ($hook) => $hook->afterSave($form, $id, $values, null, $user));
+
             $this->log->record('create', $form->table_name, $id, null, $values, $form->code);
 
             return $id;
@@ -66,9 +93,15 @@ class FormRepository
         DB::transaction(function () use ($form, $id, $input, $user, $expectedVersion) {
             $before = (array) $this->findOrFail($form, $id, $user);
 
+            $this->assertNotLocked($form, $before);
             $this->assertNotStale($form, $before, $expectedVersion);
 
+            $input = $this->withComputedDetails($form, $input);
             $values = $this->mapValues($form, $input, $user, $before);
+
+            foreach ($this->registry->hooksFor($form) as $hook) {
+                $values = $hook->beforeSave($form, $values, $before, $user);
+            }
 
             if ($form->use_audit_column) {
                 $values = $this->withAudit($form->table_name, $values, $user, false);
@@ -83,6 +116,9 @@ class FormRepository
             $this->rowQuery($form, $id, $user)->update($values);
 
             $this->saveDetails($form, $input, $id, $user);
+
+            $this->runHooks($form, fn ($hook) => $hook->afterSave($form, $id, $values, $before, $user));
+
             $this->log->record('update', $form->table_name, $id, $before, $values, $form->code);
         });
     }
@@ -93,6 +129,13 @@ class FormRepository
 
         DB::transaction(function () use ($form, $id, $user) {
             $before = (array) $this->findOrFail($form, $id, $user);
+
+            // Kebijakan metadata lebih dulu, baru kode: kalau baris memang
+            // terkunci, hook tidak perlu ikut dijalankan sama sekali.
+            $this->assertNotLocked($form, $before);
+
+            // Sebelum apa pun disentuh, supaya hook masih bisa menolaknya.
+            $this->runHooks($form, fn ($hook) => $hook->beforeDelete($form, $id, $before, $user));
 
             if ($form->use_soft_delete) {
                 // Berkas sengaja dibiarkan: baris yang di-soft-delete masih
@@ -113,8 +156,36 @@ class FormRepository
                 $this->deleteFiles($form, $before);
             }
 
+            $this->runHooks($form, fn ($hook) => $hook->afterDelete($form, $id, $before, $user));
+
             $this->log->record('delete', $form->table_name, $id, $before, null, $form->code);
         });
+    }
+
+    /**
+     * Tolak perubahan bila baris memenuhi kondisi penguncian form.
+     *
+     * Menyembunyikan tombol lewat show_condition saja tidak cukup: form edit
+     * tetap bisa dibuka lewat URL langsung, dan penghapusan tetap bisa dikirim
+     * lewat request biasa. Penguncian harus ditegakkan di sini, di satu-satunya
+     * jalan yang dilalui semua penulisan.
+     */
+    private function assertNotLocked(Form $form, array $before): void
+    {
+        // Tanpa pemeriksaan ini, form yang tidak menyetel lock_condition akan
+        // cocok dengan kondisi kosong dan seluruh barisnya ikut terkunci.
+        if (RowCondition::isEmpty($form->lock_condition)) {
+            return;
+        }
+
+        if (! RowCondition::matches($form->lock_condition, $before)) {
+            return;
+        }
+
+        throw new RecordLockedException(
+            $form->lock_message
+                ?: 'Data ini sudah terkunci dan tidak dapat diubah lagi.'
+        );
     }
 
     /**
@@ -230,7 +301,34 @@ class FormRepository
     {
         $values = [];
 
+        // Nilai yang bisa dirujuk rumus induk. Field terhitung ikut ditambahkan
+        // di sini setelah dihitung, sehingga rumus boleh merujuk field terhitung
+        // yang urutannya lebih awal.
+        $lingkup = [];
+
         foreach ($form->fields as $field) {
+            $lingkup[$field->field_name] = $input[$field->field_name] ?? null;
+        }
+
+        $sums = $this->detailSums($form, $input);
+
+        foreach ($form->fields as $field) {
+            // Field terhitung diproses lebih dulu dan TIDAK pernah memakai
+            // nilai kiriman: kalau memakainya, siapa pun bisa mem-POST subtotal
+            // sesukanya lewat devtools.
+            if ($field->isComputed()) {
+                $column = $this->sources->assertColumn($form->table_name, $field->field_name);
+                $hasil = $this->roundComputed(
+                    $field,
+                    FormulaEvaluator::evaluate($field->formula, $lingkup, $sums),
+                );
+
+                $lingkup[$field->field_name] = $hasil;
+                $values[$column] = $this->castValue($field, $hasil);
+
+                continue;
+            }
+
             if ($field->is_readonly) {
                 continue;
             }
@@ -260,6 +358,93 @@ class FormRepository
         }
 
         return $values;
+    }
+
+
+    /**
+     * Hitung ulang field ber-rumus di setiap baris detail.
+     *
+     * Dikerjakan sebelum apa pun disimpan, karena rumus induk seperti
+     * `sum(items.subtotal)` menjumlahkan kolom yang nilainya sendiri hasil
+     * rumus. Menjumlahkan nilai kiriman berarti mempercayai angka dari layar.
+     *
+     * @param  array<string, mixed>  $input
+     * @return array<string, mixed>
+     */
+    private function withComputedDetails(Form $form, array $input): array
+    {
+        foreach ($form->details as $detail) {
+            if (! array_key_exists($detail->code, $input['detail'] ?? [])) {
+                continue;
+            }
+
+            $terhitung = $detail->fields->filter(fn (FormField $f) => $f->isComputed());
+
+            if ($terhitung->isEmpty()) {
+                continue;
+            }
+
+            foreach ($input['detail'][$detail->code] as $i => $row) {
+                $lingkup = [];
+
+                foreach ($detail->fields as $field) {
+                    $lingkup[$field->field_name] = $row[$field->field_name] ?? null;
+                }
+
+                // Urutan field menentukan urutan hitung; rumus hanya boleh
+                // merujuk field terhitung yang lebih awal (dijaga validasi).
+                foreach ($detail->fields as $field) {
+                    if (! $field->isComputed()) {
+                        continue;
+                    }
+
+                    $hasil = $this->roundComputed(
+                        $field,
+                        FormulaEvaluator::evaluate($field->formula, $lingkup, []),
+                    );
+
+                    $lingkup[$field->field_name] = $hasil;
+                    $input['detail'][$detail->code][$i][$field->field_name] = $hasil;
+                }
+            }
+        }
+
+        return $input;
+    }
+
+    /**
+     * Jumlah tiap kolom detail, untuk rumus induk `sum(kode.kolom)`.
+     *
+     * @param  array<string, mixed>  $input
+     * @return array<string, float>
+     */
+    private function detailSums(Form $form, array $input): array
+    {
+        $sums = [];
+
+        foreach ($form->details as $detail) {
+            foreach ($input['detail'][$detail->code] ?? [] as $row) {
+                foreach ($detail->fields as $field) {
+                    $kunci = $detail->code.'.'.$field->field_name;
+                    $sums[$kunci] = ($sums[$kunci] ?? 0.0)
+                        + (float) ($row[$field->field_name] ?? 0);
+                }
+            }
+        }
+
+        return $sums;
+    }
+
+    /**
+     * Bulatkan hasil rumus sebelum disimpan.
+     *
+     * castValue() memakai (int) untuk jenis 'number', yang MEMOTONG — 2,7 jadi
+     * 2. Sisi klien membulatkan. Tanpa penyamaan ini, angka di layar bisa beda
+     * satu dari yang tersimpan.
+     */
+    private function roundComputed(FormField $field, float $value): float
+    {
+        return $field->input_type === 'number' ? round($value) : round($value, 2);
     }
 
     private function castValue(FormField $field, mixed $value): mixed
@@ -297,6 +482,8 @@ class FormRepository
                 $values = [$foreignKey => $parentId];
 
                 foreach ($detail->fields as $field) {
+                    // Baris detail sudah dilengkapi withComputedDetails(), jadi
+                    // field terhitung pun ada isinya di sini.
                     if (! array_key_exists($field->field_name, $row)) {
                         continue;
                     }

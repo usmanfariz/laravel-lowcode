@@ -66,6 +66,7 @@
 <script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap4.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.full.min.js"></script>
 <script src="{{ asset('js/lc-chart.js') }}?v={{ @filemtime(public_path('js/lc-chart.js')) }}"></script>
+<script src="{{ asset('js/lc-formula.js') }}?v={{ @filemtime(public_path('js/lc-formula.js')) }}"></script>
 <script>
     $.ajaxSetup({ headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') } });
     $.fn.select2.defaults.set('theme', 'bootstrap4');

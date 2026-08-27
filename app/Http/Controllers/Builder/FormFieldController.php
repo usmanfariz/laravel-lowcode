@@ -251,8 +251,11 @@ class FormFieldController extends Controller
         return [
             ...$request->safe()->except(['options', 'form_detail_id']),
             'is_required' => $request->boolean('is_required'),
-            'is_readonly' => $request->boolean('is_readonly'),
             'is_unique' => $request->boolean('is_unique'),
+            'show_total' => $request->boolean('show_total'),
+            // Field terhitung selalu hanya-baca: nilainya berasal dari rumus,
+            // dan apa pun yang diketik pengguna diabaikan saat disimpan.
+            'is_readonly' => $request->filled('formula') || $request->boolean('is_readonly'),
             'is_active' => $request->boolean('is_active'),
         ];
     }

@@ -111,12 +111,22 @@
             <div class="card">
                 <div class="card-header"><h3 class="card-title">Sifat</h3></div>
                 <div class="card-body">
-                    @foreach ([
-                        'is_required' => 'Wajib diisi',
-                        'is_readonly' => 'Hanya baca',
-                        'is_unique' => 'Nilai harus unik',
-                        'is_active' => 'Aktif',
-                    ] as $name => $label)
+                    @php
+                        $sifat = [
+                            'is_required' => 'Wajib diisi',
+                            'is_readonly' => 'Hanya baca',
+                            'is_unique' => 'Nilai harus unik',
+                            'is_active' => 'Aktif',
+                        ];
+
+                        // Baris total hanya ada di tabel detail, jadi pilihannya
+                        // pun hanya ditawarkan di sana.
+                        if ($detail) {
+                            $sifat['show_total'] = 'Jumlahkan di baris total';
+                        }
+                    @endphp
+
+                    @foreach ($sifat as $name => $label)
                         <div class="custom-control custom-switch mb-2">
                             <input type="hidden" name="{{ $name }}" value="0">
                             <input type="checkbox" class="custom-control-input" id="{{ $name }}"
@@ -125,6 +135,42 @@
                             <label class="custom-control-label" for="{{ $name }}">{{ $label }}</label>
                         </div>
                     @endforeach
+
+                    @error('show_total')
+                        <div class="text-danger small mb-2">{{ $message }}</div>
+                    @enderror
+
+                    <hr class="my-3">
+
+                    <div class="form-group mb-0">
+                        <label>Rumus</label>
+                        <input type="text" name="formula"
+                               class="form-control @error('formula') is-invalid @enderror"
+                               value="{{ old('formula', $field->formula) }}"
+                               placeholder="{{ $detail ? 'qty * harga' : 'sum(items.subtotal)' }}">
+                        @error('formula')<span class="invalid-feedback">{{ $message }}</span>@enderror
+                        <small class="form-text text-muted">
+                            Isi untuk membuat field ini <strong>terhitung</strong>: nilainya
+                            diturunkan dari field lain dan tidak bisa diketik.
+                            Boleh memakai <code>+ - * / ( )</code>, angka, dan nama field
+                            @if (! $detail)
+                                — termasuk <code>sum(kode_detail.nama_field)</code> untuk
+                                menjumlahkan baris detail.
+                            @else
+                                di baris detail yang sama.
+                            @endif
+                            Kosongkan bila field ini diisi manual.
+                        </small>
+                    </div>
+
+                    @if ($detail && ! $detail->show_total_row)
+                        <p class="text-muted small mb-0">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Baris total untuk <strong>{{ $detail->title }}</strong> sedang mati,
+                            jadi penjumlahan belum akan tampil. Nyalakan lewat
+                            <a href="{{ route('builder.details.index', $form) }}">pengaturan detail</a>.
+                        </p>
+                    @endif
                 </div>
             </div>
         </div>

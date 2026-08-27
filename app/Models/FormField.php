@@ -9,7 +9,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
     'form_id', 'form_detail_id', 'field_name', 'label', 'input_type',
-    'is_required', 'is_readonly', 'is_unique', 'default_value', 'placeholder',
+    'is_required', 'is_readonly', 'is_unique', 'show_total', 'formula',
+    'default_value', 'placeholder',
     'help_text', 'width', 'order_no', 'validation',
     'data_source_type', 'data_source', 'value_field', 'label_field',
     'data_filter', 'data_order_by', 'depends_on', 'depends_column',
@@ -24,6 +25,7 @@ class FormField extends Model
             'is_required' => 'boolean',
             'is_readonly' => 'boolean',
             'is_unique' => 'boolean',
+            'show_total' => 'boolean',
             'is_active' => 'boolean',
             'data_filter' => 'array',
             'show_condition' => 'array',
@@ -43,6 +45,12 @@ class FormField extends Model
     }
 
     /** Nama komponen Blade yang menangani input_type ini. */
+    /** Field terhitung: nilainya diturunkan rumus, bukan diketik pengguna. */
+    public function isComputed(): bool
+    {
+        return filled($this->formula);
+    }
+
     public function component(): string
     {
         return match ($this->input_type) {

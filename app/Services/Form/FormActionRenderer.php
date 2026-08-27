@@ -77,6 +77,9 @@ class FormActionRenderer
         $target = (string) $action->target_value;
 
         return match ($action->action_type) {
+            // Handler tidak menunjuk route milik Anda; ia dijalankan lewat
+            // endpoint engine yang memeriksa izin dan mencatat jejaknya.
+            'handler' => route('forms.action', ['code' => $form->code, 'action' => $action->code]),
             'route' => \Route::has($target)
                 ? $this->routeUrl($target)
                 : '#',

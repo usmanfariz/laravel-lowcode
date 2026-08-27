@@ -73,6 +73,8 @@ Route::middleware(['auth', 'active'])->group(function () {
         ->whereIn('format', ['xlsx', 'csv', 'pdf', 'print'])->name('forms.export');
     Route::get('forms/{code}/options/{field}', [FormController::class, 'options'])
         ->whereNumber('field')->name('forms.options');
+    Route::post('forms/{code}/action/{action}', [FormController::class, 'action'])
+        ->name('forms.action');
     Route::post('forms/{code}', [FormController::class, 'store'])->name('forms.store');
     Route::get('forms/{code}/{id}/edit', [FormController::class, 'edit'])->name('forms.edit');
     Route::match(['put', 'patch'], 'forms/{code}/{id}', [FormController::class, 'update'])->name('forms.update');

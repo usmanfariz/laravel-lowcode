@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Support\ColumnFormatter;
+use App\Exceptions\ActionFailedException;
+use App\Exceptions\RecordLockedException;
 use App\Exceptions\StaleRecordException;
 use App\Models\Form;
 use App\Models\FormField;
+use App\Services\ActivityLogger;
 use App\Services\DataSourceResolver;
 use App\Services\ExportService;
 use App\Services\Form\FormActionRenderer;
@@ -14,9 +16,12 @@ use App\Services\Form\FormRenderer;
 use App\Services\Form\FormRepository;
 use App\Services\Form\FormService;
 use App\Services\Form\FormValidator;
+use App\Services\Form\LowcodeRegistry;
+use App\Support\ColumnFormatter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -31,7 +36,65 @@ class FormController extends Controller
         private readonly FormValidator $validator,
         private readonly ExportService $export,
         private readonly FormActionRenderer $actions,
+        private readonly LowcodeRegistry $registry,
+        private readonly ActivityLogger $logger,
     ) {}
+
+    /**
+     * Jalankan aksi berjenis handler.
+     *
+     * Metadata hanya menyebut kunci; class-nya diambil dari config lewat
+     * registry. Izin diperiksa di sini, bukan di dalam handler — supaya handler
+     * yang lupa memeriksanya tetap tidak bisa ditembus.
+     */
+    public function action(Request $request, string $code, string $action): JsonResponse
+    {
+        $form = $this->forms->byCode($code);
+
+        $definisi = $form->actions
+            ->where('code', $action)
+            ->where('is_active', true)
+            ->firstWhere('action_type', 'handler');
+
+        abort_if($definisi === null, 404, "Aksi '{$action}' tidak ditemukan pada form ini.");
+
+        if ($definisi->permission_code
+            && ! $request->user()->hasPermission($definisi->permission_code)) {
+            abort(403, "Anda tidak memiliki izin '{$definisi->permission_code}'.");
+        }
+
+        // Aksi per baris dan massal mengirim id terpilih; aksi toolbar boleh kosong.
+        $ids = array_values(array_filter(
+            array_map('strval', (array) $request->input('ids', [])),
+            fn (string $id) => $id !== '',
+        ));
+
+        abort_if(
+            $definisi->position !== 'toolbar' && $ids === [],
+            422,
+            'Tidak ada baris yang dipilih.',
+        );
+
+        try {
+            $pesan = DB::transaction(
+                fn () => $this->registry->handler($definisi->target_value)
+                    ->handle($form, $ids, $request->user())
+            );
+        } catch (ActionFailedException $e) {
+            // Pesan handler ditampilkan apa adanya karena memang ditulis untuk
+            // dibaca pengguna. Exception lain tidak — isinya bisa membocorkan
+            // detail internal.
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+
+        $this->logger->record('action', $form->table_name, $ids[0] ?? null, null, [
+            'action' => $definisi->code,
+            'handler' => $definisi->target_value,
+            'ids' => $ids,
+        ], $form->code);
+
+        return response()->json(['message' => $pesan]);
+    }
 
     /** Ekspor halaman list form dengan pencarian yang sedang berlaku. */
     public function export(Request $request, string $code, string $format): Response
@@ -164,7 +227,7 @@ class FormController extends Controller
                 $form, $id, $data, $request->user(),
                 $request->input('__version')
             );
-        } catch (StaleRecordException $e) {
+        } catch (RecordLockedException|StaleRecordException $e) {
             return back()->withInput()->with('error', $e->getMessage());
         }
 
@@ -178,7 +241,11 @@ class FormController extends Controller
         $this->authorizeAction($request, $form, 'delete');
         abort_unless($form->allow_delete, 403, 'Form ini tidak mengizinkan penghapusan data.');
 
-        $this->repository->delete($form, $id, $request->user());
+        try {
+            $this->repository->delete($form, $id, $request->user());
+        } catch (RecordLockedException $e) {
+            return redirect()->to(url("forms/{$form->code}"))->with('error', $e->getMessage());
+        }
 
         return redirect()->to(url("forms/{$form->code}"))
             ->with('success', ($form->title ?: $form->name).' berhasil dihapus.');

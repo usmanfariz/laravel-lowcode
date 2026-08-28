@@ -37,6 +37,7 @@ punya — hak DDL.
 | **Master-detail** | Satu induk dengan banyak baris anak dalam satu form |
 | **Hak akses** | Role, permission per aksi, dan pembatasan data per baris (row-level scope) |
 | **Ekspor** | Excel, CSV, PDF, dan Cetak; data besar otomatis dikerjakan di latar belakang |
+| **Chatbot bantuan** | Tanya jawab cara pemakaian di setiap halaman, dijawab dari basis pengetahuan sendiri — tanpa layanan luar |
 | **Log aktivitas** | Setiap perubahan tercatat lengkap dengan nilai lama dan barunya |
 | **Pengaturan** | Nama aplikasi, logo, favicon, identitas perusahaan, warna tema, dan kop cetak — dari satu halaman |
 
@@ -104,7 +105,7 @@ Penjadwal membuang berkas ekspor yang lewat masa simpan. Tambahkan satu entri cr
 php artisan test
 ```
 
-229 test. Sebagian besar berjalan di SQLite in-memory tanpa persiapan apa pun.
+331 test. Sebagian besar berjalan di SQLite in-memory tanpa persiapan apa pun.
 
 21 test menyentuh perilaku yang hanya muncul di MySQL (`information_schema`, kolom
 `ENUM`, penolakan nama kolom ganda pada derived table) dan **dilewati otomatis** sampai

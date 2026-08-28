@@ -233,7 +233,7 @@ Tombol tambahan di halaman daftar. Tiga posisi:
 | URL langsung | alamat | pindah ke alamat mana pun |
 | Permintaan AJAX | alamat | panggil endpoint tanpa pindah halaman |
 | Buka modal | id modal | membuka modal yang sudah ada di halaman |
-| **Handler** | kunci terdaftar | menjalankan kode Anda — lihat bagian 11 |
+| **Handler** | kunci terdaftar | menjalankan kode Anda — lihat bagian 12 |
 
 **Tampilkan tombol hanya bila** membuat tombol muncul selektif: pilih kolom, isi
 nilainya. Misalnya tombol *Posting* yang hanya tampil pada baris berstatus `draft`.
@@ -503,7 +503,61 @@ Setiap penyimpanan tercatat di Log Aktivitas lengkap dengan nilai lama dan barun
 
 ---
 
-## 11. Menyambung kode sendiri
+## 11. Bantuan di dalam aplikasi
+
+Ikon tanda tanya di sudut kanan bawah membuka chatbot bantuan. Ia menjawab pertanyaan
+cara pemakaian — mendaftarkan tabel, membuat form, mengatur izin — tanpa pengguna
+perlu meninggalkan halaman yang sedang dikerjakannya.
+
+Jawabannya datang dari basis pengetahuan yang tersimpan di database aplikasi ini,
+bukan dari model bahasa. **Tidak ada panggilan ke layanan luar; pertanyaan pengguna
+tidak pernah meninggalkan server Anda.** Konsekuensinya disengaja: bot ini tidak
+mengarang. Bila tidak ada artikel yang cukup dekat, ia mengatakannya dan menawarkan
+pertanyaan terdekat.
+
+Selain mengetik, tombol daftar di kepala panel menampilkan seluruh topik yang
+diketahuinya, dikelompokkan per kategori.
+
+### Melengkapi jawabannya
+
+**Sistem → Bantuan**
+
+Isi bawaan sudah terpasang lewat `MetadataSeeder`. Yang perlu Anda tambahkan adalah
+jawaban untuk hal yang khas di tempat Anda — nama form, alur persetujuan, kebiasaan
+kerja tim.
+
+Tiap artikel punya:
+
+| Kolom | Gunanya |
+|---|---|
+| **Pertanyaan** | Tulis sebagaimana pengguna menanyakannya, bukan sebagai judul bab |
+| **Jawaban** | Teks biasa. `**tebal**`, `` `kode` ``, baris berawalan `-`, dan blok ``` dikenali |
+| **Kata Kunci** | Istilah yang tidak muncul di pertanyaan: sinonim, singkatan, padanan Inggris, bunyi pesan galat |
+| **Route Tujuan** | Tombol "buka halaman" pada balon jawaban |
+| **Izin untuk Tombol** | Menyembunyikan tombolnya dari yang tidak berhak — jawabannya tetap terbaca |
+
+**Kata kunci yang paling menentukan apakah artikel ketemu.** Pertanyaan ditulis satu
+kali dengan satu susunan kata; kata kunci adalah tempat menampung susunan lain yang
+dipakai orang di lapangan.
+
+> Kata tanya seperti "cara", "kenapa", dan "berapa" diabaikan saat mencocokkan. Hampir
+> setiap artikel memuatnya, jadi mencocokkannya sama saja dengan tidak mencocokkan
+> apa-apa. Begitu pula kata yang muncul di banyak artikel — makin sering sebuah kata
+> dipakai, makin kecil bobotnya.
+
+### Pertanyaan yang tidak terjawab
+
+Panel kanan halaman yang sama menampilkan pertanyaan yang gagal dijawab, urut dari
+yang paling sering ditanyakan, lengkap dengan tautan **Buatkan jawabannya**.
+
+Di situlah daftar pekerjaan Anda. Tanpa daftar itu, satu-satunya cara tahu jawaban apa
+yang masih kurang adalah menunggu ada yang mengeluh.
+
+Riwayatnya tumbuh terus; kotak di kaki panel membuangnya secara berkala.
+
+---
+
+## 12. Menyambung kode sendiri
 
 Sampai di sini semuanya diatur lewat layar. Sebagian aturan bisnis memang tidak bisa
 dinyatakan sebagai metadata — mengurangi stok saat nota disimpan, memberi nomor

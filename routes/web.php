@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\DataSourceController;
 use App\Http\Controllers\Admin\GeneratorController;
+use App\Http\Controllers\Admin\HelpArticleController;
 use App\Http\Controllers\Admin\MenuController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\SettingController;
@@ -19,6 +20,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Demo\ProductActionController;
 use App\Http\Controllers\ExportJobController;
 use App\Http\Controllers\FormController;
+use App\Http\Controllers\HelpBotController;
 use App\Http\Controllers\ReportController;
 use Illuminate\Support\Facades\Route;
 
@@ -223,6 +225,26 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::middleware('permission:system.setting')->group(function () {
         Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
         Route::put('settings', [SettingController::class, 'update'])->name('settings.update');
+    });
+
+    // Chatbot bantuan — terbuka untuk semua yang login. Pembatasan laju ada
+    // karena kotak ketik yang terpasang di setiap halaman adalah endpoint
+    // paling mudah dipanggil berulang-ulang di aplikasi ini.
+    Route::get('help/topics', [HelpBotController::class, 'topics'])->name('help.topics');
+    Route::post('help/ask', [HelpBotController::class, 'ask'])
+        ->middleware('throttle:30,1')->name('help.ask');
+    Route::get('help/articles/{id}', [HelpBotController::class, 'article'])
+        ->whereNumber('id')->name('help.article');
+
+    // Basis pengetahuan chatbot
+    Route::middleware('permission:system.help')->group(function () {
+        Route::get('help-articles', [HelpArticleController::class, 'index'])->name('help-articles.index');
+        Route::get('help-articles/create', [HelpArticleController::class, 'create'])->name('help-articles.create');
+        Route::post('help-articles', [HelpArticleController::class, 'store'])->name('help-articles.store');
+        Route::post('help-articles/prune', [HelpArticleController::class, 'prune'])->name('help-articles.prune');
+        Route::get('help-articles/{helpArticle}/edit', [HelpArticleController::class, 'edit'])->name('help-articles.edit');
+        Route::put('help-articles/{helpArticle}', [HelpArticleController::class, 'update'])->name('help-articles.update');
+        Route::delete('help-articles/{helpArticle}', [HelpArticleController::class, 'destroy'])->name('help-articles.destroy');
     });
 
     // Menu

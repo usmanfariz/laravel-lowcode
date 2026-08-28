@@ -59,6 +59,8 @@
     @include('layouts.adminlte.partials.footer')
 </div>
 
+@include('layouts.adminlte.partials.chatbot')
+
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2.0/dist/js/adminlte.min.js"></script>
@@ -67,6 +69,7 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.full.min.js"></script>
 <script src="{{ asset('js/lc-chart.js') }}?v={{ @filemtime(public_path('js/lc-chart.js')) }}"></script>
 <script src="{{ asset('js/lc-formula.js') }}?v={{ @filemtime(public_path('js/lc-formula.js')) }}"></script>
+<script src="{{ asset('js/lc-chatbot.js') }}?v={{ @filemtime(public_path('js/lc-chatbot.js')) }}"></script>
 <script>
     $.ajaxSetup({ headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') } });
     $.fn.select2.defaults.set('theme', 'bootstrap4');

@@ -55,6 +55,7 @@ class MetadataSeeder extends Seeder
             ['system.dashboard',      'Atur Dashboard',        'Sistem'],
             ['system.setting',        'Kelola Pengaturan',     'Sistem'],
             ['system.activity_log',   'Lihat Log Aktivitas',   'Sistem'],
+            ['system.help',           'Kelola Bantuan',        'Sistem'],
             ['user.view',             'Lihat User',            'Pengguna'],
             ['user.create',           'Tambah User',           'Pengguna'],
             ['user.edit',             'Ubah User',             'Pengguna'],
@@ -161,7 +162,8 @@ class MetadataSeeder extends Seeder
             ['system.report_builder', 'Report Builder', 'fas fa-chart-bar', 'builder.reports.index', 'system.builder.report', 6],
             ['system.data_sources', 'Sumber Data', 'fas fa-database', 'data-sources.index', 'system.data_source', 7],
             ['system.activity_logs', 'Log Aktivitas', 'fas fa-history', 'activity-logs.index', 'system.activity_log', 8],
-            ['system.settings', 'Pengaturan', 'fas fa-sliders-h', 'settings.index', 'system.setting', 9],
+            ['system.help', 'Bantuan', 'fas fa-question-circle', 'help-articles.index', 'system.help', 9],
+            ['system.settings', 'Pengaturan', 'fas fa-sliders-h', 'settings.index', 'system.setting', 10],
         ];
 
         foreach ($systemMenus as [$code, $name, $icon, $target, $permission, $order]) {
@@ -337,6 +339,10 @@ class MetadataSeeder extends Seeder
                 ]
             );
         }
+
+        // Basis pengetahuan chatbot bantuan. Ikut di sini, bukan di seeder demo:
+        // petunjuk cara memakai aplikasi bukan data contoh yang boleh dibuang.
+        $this->call(HelpArticleSeeder::class);
 
         // Kedua cache ini `rememberForever`. Tanpa dibuang di sini, menu dan
         // pengaturan yang baru ditambahkan seeder tidak akan terlihat sampai

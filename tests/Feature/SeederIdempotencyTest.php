@@ -33,6 +33,7 @@ class SeederIdempotencyTest extends TestCase
             'users' => DB::table('users')->count(),
             'user_roles' => DB::table('user_roles')->count(),
             'data_sources' => DB::table('data_sources')->count(),
+            'help_articles' => DB::table('help_articles')->count(),
         ];
     }
 
